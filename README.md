@@ -1,2 +1,2 @@
-# doc-website-en
-Welcome Tigase documentation website
+# tigase-server-documentation
+Welcome Tigase documentation website for administration guide
