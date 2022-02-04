@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TigaseDoc \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-04 11:37-0800\n"
+"POT-Creation-Date: 2022-02-04 14:43-0800\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -21,23 +21,39 @@ msgstr ""
 msgid "Tigase Administration Guide"
 msgstr ""
 
-#: ../../V8.2.0.rst:4
-msgid ""
-"Date: 2022-02-02 Version:  V8.2.0 1. Tigase Release Notes "
-"============================ Welcome to Tigase XMPP Server "
-"8.2.0-SNAPSHOT! This is a feature release for Tigase XMPP Server v8 with "
-"a number of fixes and updates."
+#: ../../V8.2.0.rst:5
+msgid "Date: 2022-02-02 Version:  V8.2.0"
 msgstr ""
 
-#: ../../V8.2.0.rst:11
+#: ../../V8.2.0.rst:9
+msgid "1. Tigase Release Notes"
+msgstr ""
+
+#: ../../V8.2.0.rst:10
+msgid ""
+"Welcome to Tigase XMPP Server 8.2.0-SNAPSHOT! This is a feature release "
+"for Tigase XMPP Server v8 with a number of fixes and updates."
+msgstr ""
+
+#: ../../V8.2.0.rst:13
 msgid "1.1. Tigase XMPP Server 8.2.0 announcement"
 msgstr ""
 
-#: ../../V8.2.0.rst:12
+#: ../../V8.2.0.rst:14
 msgid "Tigase XMPP Server 8.2.0-SNAPSHOT Change notes and announcement"
 msgstr ""
 
-#: ../../V8.2.0.rst:15
+#: ../../V8.2.0.rst:17
 msgid "1.1.1. Major Changes"
 msgstr ""
+
+#~ msgid ""
+#~ "Date: 2022-02-02 Version:  V8.2.0 1. "
+#~ "Tigase Release Notes ============================"
+#~ " Welcome to Tigase XMPP Server "
+#~ "8.2.0-SNAPSHOT! This is a feature "
+#~ "release for Tigase XMPP Server v8 "
+#~ "with a number of fixes and "
+#~ "updates."
+#~ msgstr ""
 
