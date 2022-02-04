@@ -19,33 +19,34 @@ msgstr ""
 
 #: ../../V8.2.0.rst:3
 msgid "Tigase Administration Guide"
-msgstr ""
+msgstr "Przewodnik po administracji Tigase"
 
 #: ../../V8.2.0.rst:5
 msgid "Date: 2022-02-02 Version:  V8.2.0"
-msgstr ""
+msgstr "Data: 2022-02-02 Wersja:  V8.2.0 "
 
 #: ../../V8.2.0.rst:9
 msgid "1. Tigase Release Notes"
-msgstr ""
+msgstr "1. Informacje o wydaniu Tigase"
 
 #: ../../V8.2.0.rst:10
 msgid ""
 "Welcome to Tigase XMPP Server 8.2.0-SNAPSHOT! This is a feature release "
 "for Tigase XMPP Server v8 with a number of fixes and updates."
-msgstr ""
+msgstr "Witamy w Tigase XMPP Server 8.2.0-SNAPSHOT! To jest wersja funkcji
+dla Tigase XMPP Server v8 z licznymi poprawkami i aktualizacjami"
 
 #: ../../V8.2.0.rst:13
 msgid "1.1. Tigase XMPP Server 8.2.0 announcement"
-msgstr ""
+msgstr "1.1. Ogłoszenie Tigase XMPP Server 8.2.0"
 
 #: ../../V8.2.0.rst:14
 msgid "Tigase XMPP Server 8.2.0-SNAPSHOT Change notes and announcement"
-msgstr ""
+msgstr "Tigase XMPP Server 8.2.0-SNAPSHOT Informacje o zmianach i zapowiedzi"
 
 #: ../../V8.2.0.rst:17
 msgid "1.1.1. Major Changes"
-msgstr ""
+msgstr "1.1.1. Główne zmiany"
 
 #~ msgid ""
 #~ "Date: 2022-02-02 Version:  V8.2.0 1. "
