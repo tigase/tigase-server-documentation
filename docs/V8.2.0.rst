@@ -10,7 +10,7 @@ Version:  V8.2.0
 
 Welcome to Tigase XMPP Server 8.2.0-SNAPSHOT! This is a feature release for Tigase XMPP Server v8 with a number of fixes and updates.
 
-1.1. Tigase XMPP Server 8.2.0 announcement
+1.1. Tigase XMPP Server 8.1.0 announcement
 ------------------------------------------
 
 Tigase XMPP Server 8.2.0-SNAPSHOT Change notes and announcement
