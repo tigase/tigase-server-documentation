@@ -1,3 +1,4 @@
 *.swp
 /_build
 /doctrees
+/locale/pl/LC_MESSAGES/.mo
