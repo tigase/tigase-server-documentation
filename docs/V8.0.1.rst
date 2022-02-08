@@ -1,0 +1,23 @@
+========================================================
+Tigase Administration Guide
+========================================================
+
+Date: 2022-02-07
+Version:  v8.0.1
+
+1. Tigase XMPP Server 8.0.0 announcement
+========================================
+
+Tigase XMPP Server 8.0.1-SNAPSHOT Change notes and announcement.
+
+1.1. Major Changes
+-------------------
+
+1.1.1. Kernel and beans configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+Tigase now operates using a Kernel and Beans style of programming. What does this mean for Tigase and You? Good news, really. Tigase XMPP Server is now working as a Kernel program, which will operate on it’s own and handle all the core functionality of the server. Component, and non-essential functionality will now be loaded as Beans. As a user, your experience will not change all that much. However, beans can be loaded and unloaded without having to restart Tigase, meaning that the program will behave more dynamically. This means a smaller footprint on memory on resources when components are not needed, and longer uptimes without having to rest art the program! This also allows for greater flexibility for Tigase XMPP Server to be better customized for unique solutions.
+
+1.1.2. New Configuration File Format
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+With the change of Tigase to a Kernel and Beans style of programming, we have also changed how the configuration file is managed. Although you will still edit the config.tdsl file like a plaintext file, a new style of formatting will be used known as DSL. Domain Specific Language may add more lines, but is a cleaner format, and provides a more secure configuration design since validation of the configuration is done at the domain level. For more information on this format and how to configure Tigase, visit :xref:'DSL Configuration Guide'.
+
