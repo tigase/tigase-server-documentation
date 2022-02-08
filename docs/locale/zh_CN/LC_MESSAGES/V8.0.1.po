@@ -1,0 +1,74 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) 2021, Qian Luo
+# This file is distributed under the same license as the TigaseDoc package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2022.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: TigaseDoc \n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2022-02-08 15:34-0800\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.9.1\n"
+
+#: ../../V8.0.1.rst:3
+msgid "Tigase Administration Guide"
+msgstr ""
+
+#: ../../V8.0.1.rst:5
+msgid "Date: 2022-02-07 Version:  v8.0.1"
+msgstr ""
+
+#: ../../V8.0.1.rst:9
+msgid "1. Tigase XMPP Server 8.0.0 announcement"
+msgstr ""
+
+#: ../../V8.0.1.rst:11
+msgid "Tigase XMPP Server 8.0.1-SNAPSHOT Change notes and announcement."
+msgstr ""
+
+#: ../../V8.0.1.rst:14
+msgid "1.1. Major Changes"
+msgstr ""
+
+#: ../../V8.0.1.rst:17
+msgid "1.1.1. Kernel and beans configuration"
+msgstr ""
+
+#: ../../V8.0.1.rst:18
+msgid ""
+"Tigase now operates using a Kernel and Beans style of programming. What "
+"does this mean for Tigase and You? Good news, really. Tigase XMPP Server "
+"is now working as a Kernel program, which will operate on it’s own and "
+"handle all the core functionality of the server. Component, and non-"
+"essential functionality will now be loaded as Beans. As a user, your "
+"experience will not change all that much. However, beans can be loaded "
+"and unloaded without having to restart Tigase, meaning that the program "
+"will behave more dynamically. This means a smaller footprint on memory on"
+" resources when components are not needed, and longer uptimes without "
+"having to rest art the program! This also allows for greater flexibility "
+"for Tigase XMPP Server to be better customized for unique solutions."
+msgstr ""
+
+#: ../../V8.0.1.rst:21
+msgid "1.1.2. New Configuration File Format"
+msgstr ""
+
+#: ../../V8.0.1.rst:22
+msgid ""
+"With the change of Tigase to a Kernel and Beans style of programming, we "
+"have also changed how the configuration file is managed. Although you "
+"will still edit the config.tdsl file like a plaintext file, a new style "
+"of formatting will be used known as DSL. Domain Specific Language may add"
+" more lines, but is a cleaner format, and provides a more secure "
+"configuration design since validation of the configuration is done at the"
+" domain level. For more information on this format and how to configure "
+"Tigase, visit :xref:'DSL Configuration Guide'."
+msgstr ""
+
