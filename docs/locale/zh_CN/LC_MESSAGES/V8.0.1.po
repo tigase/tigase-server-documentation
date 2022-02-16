@@ -19,11 +19,11 @@ msgstr ""
 
 #: ../../V8.0.1.rst:3
 msgid "Tigase Administration Guide"
-msgstr ""
+msgstr "Tigase管理指南"
 
 #: ../../V8.0.1.rst:5
 msgid "Date: 2022-02-07 Version:  v8.0.1"
-msgstr ""
+msgstr "版本：v8.0.1"
 
 #: ../../V8.0.1.rst:9
 msgid "1. Tigase XMPP Server 8.0.0 announcement"
