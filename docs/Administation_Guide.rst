@@ -73,7 +73,7 @@ The "full list of all known XMPP<https://xmpp.org/software/clients/>"_ clients i
 Install the Jabber client of your choice and set up for a Tigase account:
 
 2.1.3. Configuration instructions for Psi
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Psi - Initial configuration
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -118,38 +118,42 @@ Short Instructions How to Add Your First Contact
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 1. Click on Psi menu - the button next to the Online text. You will see something like this:
-  .. image:: image/psi-menu.png
-  From all menu options select the top one - Add a contact:
-  .. image:: image/psi-menu-add-contact.png
+   .. image:: image/psi-menu.png
+
+   From all menu options select the top one - Add a contact:
+   .. image:: image/psi-menu-add-contact.png
 
 2. The next window will display where you can enter your contact details:
-  .. image:: image/psi-add-user-empty.png
-  You have to know the Jabber ID of the person you want to add to your contact list. Let’s assume, for example, you want to add Tigase server administrator’s Jabber ID to your contact list. So, after you enter these details the window will look like this:
-  .. image:: image/psi-add-user-filled.png
-  Click the **Add** button.
+   ..image:: image/psi-add-user-empty.png
+
+   You have to know the Jabber ID of the person you want to add to your contact list. Let’s assume, for example, you want to add Tigase server administrator’s Jabber ID to your contact list. So, after you enter these details the window will look like this:
+   .. image:: image/psi-add-user-filled.png
+   Click the **Add** button.
 
 3. Now you will see a confirmation window that a new person has been added to your contact list:
-  .. image:: image/psi-kobit-added.png
+   .. image:: image/psi-kobit-added.png
+
   But there is more behind the scenes. Adding a contact to your **Roster** (contact list) usually means you can see whether the person is online and available to talk or not. The person however, may not wish you to see his presence. So, to make sure the other person accepts you as a friend Psi sent a request to the address you just entered with the question of whether he agrees to show his presence to you.
 
   You won’t be able to see the users availability until he sends confirmation.
 
 4. Once the other user sends confirmation back, you will usually receive 2 system events:
-  .. image:: image/psi-kobit-auth-received.png
+   .. image:: image/psi-kobit-auth-received.png
 
 5. Click on the contact to see a window with these messages:
-  .. image:: image/psi-authorized-window.png
+   .. image:: image/psi-authorized-window.png
 
 6. One message just says you have been authorized by the other user:
-  .. image:: image/psi-authorized-window-2.png
-  So you simply click **Next** to see the second message.
+   .. image:: image/psi-authorized-window-2.png
+
+   So you simply click **Next** to see the second message.
 
 7. The second message is a bit more interesting. It contains the question of whether you also authorize the other user to see your presence. If you want to accept this request just
    click **Add/Auth**.
    .. image:: image/psi-authorized-window-3.png
 
 8. Finally main Psi window with your new contact:
-  .. image:: image/psi-kobit-added-authorized.png
+   .. image:: image/psi-kobit-added-authorized.png
 
 Well done!
 
@@ -235,829 +239,632 @@ There are also interfaces and handlers available to make it easy to implement a 
 2.2.6. XMPP Supported Extensions
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Based on XEP-0387: 'XMPP Compliance Suites 2018<https://xmpp.org/extensions/xep-0387.html>"_
+Based on `XEP-0387: XMPP Compliance Suites 2018 <https://xmpp.org/extensions/xep-0387.html>`__
+
+
 
 Core Compliance Suite
 ~~~~~~~~~~~~~~~~~~~~~
 
-.. list-table:: Table 1. Core Compliance Suite
-  :align: left
+.. table 1:: Core Compliance Suite
 
-* - Support
-  - Specification
-  - Name
-  - Comment
-* - ✓
-  - 'RFC6120<https://datatracker.ietf.org/doc/html/rfc6120>'_
-  - Extensible Messaging and Presence Protocol (XMPP): Core
-  - 
-* - ✓
-  - 'RFC7622<https://datatracker.ietf.org/doc/html/rfc7622>'_
-  - Extensible Messaging and Presence Protocol (XMPP): Address Format
-  - We support previous version of the specification: RFC6122
-  * - ✓
-  - 'RFC7590<https://datatracker.ietf.org/doc/html/rfc7590>'_
-  - Use of Transport Layer Security (TLS) in the Extensible Messaging and Presence Protocol (XMPP)
-  - 
-* - ✓
-  - 'XEP-0368<https://xmpp.org/extensions/xep-0368.html>'_
-  - SRV records for XMPP over TLS
-  - Requires adding DNS entries pointing to port 5223
-* - ✓
-  - 'XEP-0030<https://xmpp.org/extensions/xep-0030.html>'_
-  - Service Discovery
-  - 
-* - ✓
-  - 'XEP-0115<https://xmpp.org/extensions/xep-0115.html>'_
-  - Entity Capabilities
-  - 
-* - ✓
-  - 'XEP-0114<https://xmpp.org/extensions/xep-0114.html>'_
-  - Jabber Component Protocol
-* - ✓
-  - 'XEP-0163<https://xmpp.org/extensions/xep-0163.html>'_
-  - Personal Eventing Protocol
-  - 
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | Support | Specification                                            | Name                                                                                           | Comment                                                   |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `RFC6120 <https://tools.ietf.org/html/rfc6120>`__        | Extensible Messaging and Presence Protocol (XMPP): Core                                        |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ⍻       | `RFC7622 <https://tools.ietf.org/html/rfc7622>`__        | Extensible Messaging and Presence Protocol (XMPP): Address Format                              | We support previous version of the specification: RFC6122 |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `RFC7590 <https://tools.ietf.org/html/rfc7590>`__        | Use of Transport Layer Security (TLS) in the Extensible Messaging and Presence Protocol (XMPP) |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `XEP-0368 <https://xmpp.org/extensions/xep-0368.html>`__ | SRV records for XMPP over TLS                                                                  | Requires adding DNS entries pointing to port 5223         |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `XEP-0030 <https://xmpp.org/extensions/xep-0030.html>`__ | Service Discovery                                                                              |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `XEP-0115 <https://xmpp.org/extensions/xep-0115.html>`__ | Entity Capabilities                                                                            |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `XEP-0114 <https://xmpp.org/extensions/xep-0114.html>`__ | Jabber Component Protocol                                                                      |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+   | ✓       | `XEP-0163 <https://xmpp.org/extensions/xep-0163.html>`__ | Personal Eventing Protocol                                                                     |                                                           |
+   +---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+-----------------------------------------------------------+
+
 
 Web Compliance Suite
-~~~~~~~~~~~~~~~~~~~~~
-.. list-table:: Table 2. Web Compliance Suite
-  :align: left
+~~~~~~~~~~~~~~~~~~~~
 
-* - Support
-  - Specification
-  - Name
-  - Comment
-* - ✓
-  - 'RFC7395<https://datatracker.ietf.org/doc/html/rfc7395>'_
-  - An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
-  - 
-* - ✓
-  - 'XEP-0206<https://xmpp.org/extensions/xep-0206.html>'_
-  - XMPP Over BOSH
-    - 
-* - ✓
-  - 'XEP-0124<https://xmpp.org/extensions/xep-0124.html>'_
-  - Bidirectional-streams Over Synchronous HTTP (BOSH)
-  - 
+.. table 2:: Web Compliance Suite
+
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+---------+
+   | Support | Specification                                            | Name                                                                           | Comment |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+---------+
+   | ✓       | `RFC7395 <https://tools.ietf.org/html/rfc7395>`__        | An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket |         |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+---------+
+   | ✓       | `XEP-0206 <https://xmpp.org/extensions/xep-0206.html>`__ | XMPP Over BOSH                                                                 |         |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+---------+
+   | ✓       | `XEP-0124 <https://xmpp.org/extensions/xep-0124.html>`__ | Bidirectional-streams Over Synchronous HTTP (BOSH)                             |         |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+---------+
+
+
+
 
 IM Compliance Suite
 ~~~~~~~~~~~~~~~~~~~~~
-.. list-table:: Table 3. Web Compliance Suite
-  :align: left
 
-* - Support
-  - Specification
-  - Name
-  - Comment
-* - ✓
-  - RFC6120
-  - Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
-    - 
-* - ✓
-  - XEP-0084
-  - User Avatar
-  - 
-* - ✓
-  - XEP-0153
-  - vCard-Based Avatars
-  - 
-* - ✓
-  - XEP-0054
-  - vcard-temp
-  - 
-* - ✓
-  - XEP-0280
-  - Message Carbons
-  - 
-* - ✓
-  - XEP-0191
-  - Blocking Command
-  - 
-* - ✓
-  - XEP-0045
-  - Multi-User Chat
-  - 
-* - ✓
-  - XEP-0249
-  - Direct MUC Invitations
-  - 
-* - ✓
-  - XEP-0048
-  - Bookmarks
-  - 
-* - ✓
-  - XEP-0223
-  - Persistent Storage of Private Data via PubSub
-  - 
-* - ✓
-  - XEP-0049
-  - Private XML Storage
-  - 
-* - ✓
-  - XEP-0198
-  - Stream Management
-  - Both Session Resumption and Stanza Acknowledgements
-* - ✓
-  - XEP-0313
-  - Message Archive Management
-  - 
+.. table 3:: Web Compliance Suite
+
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | Support | Specification                                            | Name                                                                              | Comment                                                     |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `RFC6120 <https://tools.ietf.org/html/rfc6120>`__        | Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0084 <https://xmpp.org/extensions/xep-0084.html>`__ | User Avatar                                                                       |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0153 <https://xmpp.org/extensions/xep-0153.html>`__ | vCard-Based Avatars                                                               |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0054 <https://xmpp.org/extensions/xep-0054.html>`__ | vcard-temp                                                                        |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0280 <https://xmpp.org/extensions/xep-0280.html>`__ | Message Carbons                                                                   |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0191 <https://xmpp.org/extensions/xep-0191.html>`__ | Blocking Command                                                                  |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0045 <https://xmpp.org/extensions/xep-0045.html>`__ | Multi-User Chat                                                                   |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0249 <https://xmpp.org/extensions/xep-0249.html>`__ | Direct MUC Invitations                                                            |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0048 <https://xmpp.org/extensions/xep-0048.html>`__ | Bookmarks                                                                         |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0223 <https://xmpp.org/extensions/xep-0223.html>`__ | Persistent Storage of Private Data via PubSub                                     |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0049 <https://xmpp.org/extensions/xep-0049.html>`__ | Private XML Storage                                                               |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0198 <https://xmpp.org/extensions/xep-0198.html>`__ | Stream Management                                                                 | Both ``Session Resumption`` and ``Stanza Acknowledgements`` |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0313 <https://xmpp.org/extensions/xep-0313.html>`__ | Message Archive Management                                                        |                                                             |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------------------------------+-------------------------------------------------------------+
+
+
+
 Mobile Compliance Suite
-~~~~~~~~~~~~~~~~~~~~~~~~
-.. list-table:: Table 4. Web Compliance Suite
-  :align: left
+~~~~~~~~~~~~~~~~~~~~~
 
-* - Support
-  - Specification
-  - Name
-  - Comment
+.. table 4:: Web Compliance Suite
 
-* - ✓
-  - RFC7395
-  - An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
-  - 
-* - ✓
-  - XEP-0198
-  - Stream Management
-  - Both Session Resumption and Stanza Acknowledgements
-* - ✓
-  - XEP-0352
-  - Client State Indication
-  - 
-* - ✓
-  - XEP-0357
-  - Push Notifications
-  - 
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | Support | Specification                                            | Name                                                                           | Comment                                                     |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `RFC7395 <https://tools.ietf.org/html/rfc7395>`__        | An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket |                                                             |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0198 <https://xmpp.org/extensions/xep-0198.html>`__ | Stream Management                                                              | Both ``Session Resumption`` and ``Stanza Acknowledgements`` |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0352 <https://xmpp.org/extensions/xep-0352.html>`__ | Client State Indication                                                        |                                                             |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+   | ✓       | `XEP-0357 <https://xmpp.org/extensions/xep-0357.html>`__ | Push Notifications                                                             |                                                             |
+   +---------+----------------------------------------------------------+--------------------------------------------------------------------------------+-------------------------------------------------------------+
+
+
+
 Non-Compliance Suite Extensions
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-.. list-table:: Table 5. Core Compliance Suite
-  :align: left
 
-* - Support
-  - Specification
-  - Name
-  - Comment
-  - ✓
-  - XEP-0004
-  - Data Forms
-  - 
-  - ✓
-  - XEP-0008
-  - IQ-Based Avatars
-  - 
-  - ✓
-  - XEP-0012
-  - Last Activity
-  - 
-  - ✓
-  - XEP-0013
-  - Flexible Offline Message Retrieval
-✓
-XEP-0016
-Privacy Lists
-✓
-XEP-0020
-Feature Negotiation
-✓
-XEP-0022
-Message Events
-✓
-XEP-0047
-In-Band Bytestreams
-✓
-XEP-0050
-Ad-Hoc Commands
-✓
-XEP-0059
-Result Set Management
-✓
-XEP-0060
-Publish-Subscribe
-✓
-XEP-0065
-SOCKS5 Bytestreams
-✓
-XEP-0066
-Out of Band Data
-✓
-XEP-0068
-Field Standardization for Data Forms
-✓
-XEP-0071
-XHTML-IM
-✓
-XEP-0072
-SOAP Over XMPP
-✓
-XEP-0077
-In-Band Registration
-✓
-XEP-0078
-Non-SASL Authentication
-✓
-XEP-0079
-Advanced Message Processing
-✓
-XEP-0080
-User Location
-✓
-XEP-0082
-XMPP Date and Time Profiles
-✓
-XEP-0083
-Nested Roster Groups
-✓
-XEP-0085
-Chat State Notifications
-✓
-XEP-0086
-Error Condition Mappings
-✓
-XEP-0091
-Legacy Delayed Delivery
-✓
-XEP-0092
-Software Version
-✓
-XEP-0096
-File Transfer
-✓
-XEP-0100
-Gateway Interaction
-✓
-XEP-0106
-JID Escaping
-✓
-XEP-0107
-User Mood
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0108
-User Activity
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0118
-User Tune
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0127
-Common Alerting Protocol (CAP) Over XMPP
-✓
-XEP-0128
-Service Discovery Extensions
-✓
-XEP-0131
-Stanza Headers and Internet Metadata (SHIM)
-✓
-XEP-0133
-Service Administration
-✓
-XEP-0136
-Message Archiving
-✓
-XEP-0141
-Data Forms Layout
-✓[1]
-XEP-0142
-Workgroup Queues
-✓
-XEP-0144
-Roster Item Exchange
-✓
-XEP-0145
-Annotations
-✓
-XEP-0146
-Remote Controlling Clients
-✓
-XEP-0152
-Reachability Addresses
-✓
-XEP-0155
-Stanza Session Negotiation
-✓
-XEP-0156
-Discovering Alternative XMPP Connection Methods
-Uses DNS records, so will work with Tigase XMPP Server
-✓
-XEP-0157
-Contact Addresses for XMPP Services
-✓
-XEP-0160
-Best Practices for Handling Offline Messages
-✓
-XEP-0166
-Jingle
-✓
-XEP-0167
-Jingle RTP Sessions
-✓
-XEP-0170
-Recommended Order of Stream Feature Negotiation
-✓
-XEP-0171
-Language Translation
-✓
-XEP-0172
-User Nickname
-✓
-XEP-0174
-Serverless Messaging
-✓
-XEP-0175
-Best Practices for Use of SASL ANONYMOUS
-✓
-XEP-0176
-Jingle ICE-UDP Transport Method
-✓
-XEP-0177
-Jingle Raw UDP Transport Method
-✓
-XEP-0178
-Best Practices for Use of SASL EXTERNAL with Certificates
-✓
-XEP-0179
-Jingle IAX Transport Method
-✓
-XEP-0180
-Jingle Video via RTP
-✓
-XEP-0181
-Jingle DTMF
-✓
-XEP-0184
-Message Receipts
-✓
-XEP-0185
-Dialback Key Generation and Validation
-✓
-XEP-0190
-Best Practice for Closing Idle Streams
-✓
-XEP-0199
-XMPP Ping
-✓
-XEP-0201
-Best Practices for Message Threads
-✓
-XEP-0202
-Entity Time
-✓
-XEP-0203
-Delayed Delivery
-✓
-XEP-0205
-Best Practices to Discourage Denial of Service Attacks
-✓
-XEP-0209
-Metacontacts
-✓
-XEP-0220
-Server Dialback
-✓
-XEP-0224
-Attention
-✓
-XEP-0225
-Component Connections
-✓
-XEP-0226
-Message Stanza Profiles
-✓
-XEP-0231
-Bits of Binary
-✓
-XEP-0234
-Jingle File Transfer
-✓
-XEP-0245
-The /me Command
-✓
-XEP-0246
-End-to-End XML Streams
-✓
-XEP-0247
-Jingle XML Streams
-✓
-XEP-0250
-C2C Authentication Using TLS
-✓
-XEP-0251
-Jingle Session Transfer
-✓
-XEP-0260
-Jingle SOCKS5 Bytestreams Transport Method
-✓
-XEP-0261
-Jingle In-Band Bytestreams Transport
-✓
-XEP-0262
-Use of ZRTP in Jingle RTP Sessions
-✓
-XEP-0277
-Microblogging over XMPP
-✓
-XEP-0292
-vCard4 Over XMPP
-✓
-XEP-0301
-In-Band Real Time Text
-✓
-XEP-0305
-XMPP Quickstart
-✓
-XEP-0323
-Internet of Things - Sensor Data
-✓
-XEP-0324
-Internet of Things - Provisioning
-✓
-XEP-0325
-Internet of Things - Control
-✓
-XEP-0326
-Internet of Things - Concentrators
-✓
-XEP-0333
-Chat Markers
-✓
-XEP-0363
-HTTP File Upload
-✓
-XEP-0387
-XMPP Compliance Suites 2018
+.. table 5:: Core Compliance Suite
+
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | Support | Specification                                            | Name                                                      | Comment                                                      |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0004 <https://xmpp.org/extensions/xep-0004.html>`__ | Data Forms                                                |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0008 <https://xmpp.org/extensions/xep-0004.html>`__ | IQ-Based Avatars                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0012 <https://xmpp.org/extensions/xep-0012.html>`__ | Last Activity                                             |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0013 <https://xmpp.org/extensions/xep-0013.html>`__ | Flexible Offline Message Retrieval                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0016 <https://xmpp.org/extensions/xep-0016.html>`__ | Privacy Lists                                             |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0020 <https://xmpp.org/extensions/xep-0020.html>`__ | Feature Negotiation                                       |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0022 <https://xmpp.org/extensions/xep-0022.html>`__ | Message Events                                            |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0047 <https://xmpp.org/extensions/xep-0047.html>`__ | In-Band Bytestreams                                       |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0050 <https://xmpp.org/extensions/xep-0050.html>`__ | Ad-Hoc Commands                                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0059 <https://xmpp.org/extensions/xep-0059.html>`__ | Result Set Management                                     |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0060 <https://xmpp.org/extensions/xep-0060.html>`__ | Publish-Subscribe                                         |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0065 <https://xmpp.org/extensions/xep-0065.html>`__ | SOCKS5 Bytestreams                                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0066 <https://xmpp.org/extensions/xep-0066.html>`__ | Out of Band Data                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0068 <https://xmpp.org/extensions/xep-0068.html>`__ | Field Standardization for Data Forms                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0071 <https://xmpp.org/extensions/xep-0071.html>`__ | XHTML-IM                                                  |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0072 <https://xmpp.org/extensions/xep-0072.html>`__ | SOAP Over XMPP                                            |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0077 <https://xmpp.org/extensions/xep-0077.html>`__ | In-Band Registration                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0078 <https://xmpp.org/extensions/xep-0078.html>`__ | Non-SASL Authentication                                   |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0079 <https://xmpp.org/extensions/xep-0079.html>`__ | Advanced Message Processing                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0080 <https://xmpp.org/extensions/xep-0080.html>`__ | User Location                                             |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0082 <https://xmpp.org/extensions/xep-0082.html>`__ | XMPP Date and Time Profiles                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0083 <https://xmpp.org/extensions/xep-0083.html>`__ | Nested Roster Groups                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0085 <https://xmpp.org/extensions/xep-0085.html>`__ | Chat State Notifications                                  |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0086 <https://xmpp.org/extensions/xep-0086.html>`__ | Error Condition Mappings                                  |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0091 <https://xmpp.org/extensions/xep-0091.html>`__ | Legacy Delayed Delivery                                   |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0092 <https://xmpp.org/extensions/xep-0092.html>`__ | Software Version                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0096 <https://xmpp.org/extensions/xep-0096.html>`__ | File Transfer                                             |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0100 <https://xmpp.org/extensions/xep-0100.html>`__ | Gateway Interaction                                       |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0106 <https://xmpp.org/extensions/xep-0106.html>`__ | JID Escaping                                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0107 <https://xmpp.org/extensions/xep-0107.html>`__ | User Mood                                                 | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0108 <https://xmpp.org/extensions/xep-0108.html>`__ | User Activity                                             | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0118 <https://xmpp.org/extensions/xep-0118.html>`__ | User Tune                                                 | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0127 <https://xmpp.org/extensions/xep-0127.html>`__ | Common Alerting Protocol (CAP) Over XMPP                  |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0128 <https://xmpp.org/extensions/xep-0128.html>`__ | Service Discovery Extensions                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0131 <https://xmpp.org/extensions/xep-0131.html>`__ | Stanza Headers and Internet Metadata (SHIM)               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0133 <https://xmpp.org/extensions/xep-0133.html>`__ | Service Administration                                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0136 <https://xmpp.org/extensions/xep-0136.html>`__ | Message Archiving                                         |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0141 <https://xmpp.org/extensions/xep-0141.html>`__ | Data Forms Layout                                         |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓ [1]_  | `XEP-0142 <https://xmpp.org/extensions/xep-0142.html>`__ | Workgroup Queues                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0144 <https://xmpp.org/extensions/xep-0144.html>`__ | Roster Item Exchange                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0145 <https://xmpp.org/extensions/xep-0145.html>`__ | Annotations                                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0146 <https://xmpp.org/extensions/xep-0146.html>`__ | Remote Controlling Clients                                |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0152 <https://xmpp.org/extensions/xep-0152.html>`__ | Reachability Addresses                                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0155 <https://xmpp.org/extensions/xep-0155.html>`__ | Stanza Session Negotiation                                |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0156 <https://xmpp.org/extensions/xep-0156.html>`__ | Discovering Alternative XMPP Connection Methods           | Uses DNS records, so will work with Tigase XMPP Server       |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0157 <https://xmpp.org/extensions/xep-0157.html>`__ | Contact Addresses for XMPP Services                       |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0160 <https://xmpp.org/extensions/xep-0160.html>`__ | Best Practices for Handling Offline Messages              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0166 <https://xmpp.org/extensions/xep-0166.html>`__ | Jingle                                                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0167 <https://xmpp.org/extensions/xep-0167.html>`__ | Jingle RTP Sessions                                       |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0170 <https://xmpp.org/extensions/xep-0170.html>`__ | Recommended Order of Stream Feature Negotiation           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0171 <https://xmpp.org/extensions/xep-0171.html>`__ | Language Translation                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0172 <https://xmpp.org/extensions/xep-0172.html>`__ | User Nickname                                             |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0174 <https://xmpp.org/extensions/xep-0174.html>`__ | Serverless Messaging                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0175 <https://xmpp.org/extensions/xep-0175.html>`__ | Best Practices for Use of SASL ANONYMOUS                  |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0176 <https://xmpp.org/extensions/xep-0176.html>`__ | Jingle ICE-UDP Transport Method                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0177 <https://xmpp.org/extensions/xep-0177.html>`__ | Jingle Raw UDP Transport Method                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0178 <https://xmpp.org/extensions/xep-0178.html>`__ | Best Practices for Use of SASL EXTERNAL with Certificates |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0179 <https://xmpp.org/extensions/xep-0179.html>`__ | Jingle IAX Transport Method                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0180 <https://xmpp.org/extensions/xep-0180.html>`__ | Jingle Video via RTP                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0181 <https://xmpp.org/extensions/xep-0181.html>`__ | Jingle DTMF                                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0184 <https://xmpp.org/extensions/xep-0184.html>`__ | Message Receipts                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0185 <https://xmpp.org/extensions/xep-0185.html>`__ | Dialback Key Generation and Validation                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0190 <https://xmpp.org/extensions/xep-0190.html>`__ | Best Practice for Closing Idle Streams                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0199 <https://xmpp.org/extensions/xep-0199.html>`__ | XMPP Ping                                                 |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0201 <https://xmpp.org/extensions/xep-0201.html>`__ | Best Practices for Message Threads                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0202 <https://xmpp.org/extensions/xep-0202.html>`__ | Entity Time                                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0203 <https://xmpp.org/extensions/xep-0203.html>`__ | Delayed Delivery                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0205 <https://xmpp.org/extensions/xep-0205.html>`__ | Best Practices to Discourage Denial of Service Attacks    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0209 <https://xmpp.org/extensions/xep-0209.html>`__ | Metacontacts                                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0220 <https://xmpp.org/extensions/xep-0220.html>`__ | Server Dialback                                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0224 <https://xmpp.org/extensions/xep-0224.html>`__ | Attention                                                 |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0225 <https://xmpp.org/extensions/xep-0225.html>`__ | Component Connections                                     |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0226 <https://xmpp.org/extensions/xep-0226.html>`__ | Message Stanza Profiles                                   |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0231 <https://xmpp.org/extensions/xep-0231.html>`__ | Bits of Binary                                            |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0234 <https://xmpp.org/extensions/xep-0234.html>`__ | Jingle File Transfer                                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0245 <https://xmpp.org/extensions/xep-0245.html>`__ | The /me Command                                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0246 <https://xmpp.org/extensions/xep-0246.html>`__ | End-to-End XML Streams                                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0247 <https://xmpp.org/extensions/xep-0247.html>`__ | Jingle XML Streams                                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0250 <https://xmpp.org/extensions/xep-0250.html>`__ | C2C Authentication Using TLS                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0251 <https://xmpp.org/extensions/xep-0251.html>`__ | Jingle Session Transfer                                   |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0260 <https://xmpp.org/extensions/xep-0260.html>`__ | Jingle SOCKS5 Bytestreams Transport Method                |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0261 <https://xmpp.org/extensions/xep-0261.html>`__ | Jingle In-Band Bytestreams Transport                      |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0262 <https://xmpp.org/extensions/xep-0262.html>`__ | Use of ZRTP in Jingle RTP Sessions                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0277 <https://xmpp.org/extensions/xep-0277.html>`__ | Microblogging over XMPP                                   |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0292 <https://xmpp.org/extensions/xep-0292.html>`__ | vCard4 Over XMPP                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0301 <https://xmpp.org/extensions/xep-0301.html>`__ | In-Band Real Time Text                                    |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0305 <https://xmpp.org/extensions/xep-0305.html>`__ | XMPP Quickstart                                           |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0323 <https://xmpp.org/extensions/xep-0323.html>`__ | Internet of Things - Sensor Data                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0324 <https://xmpp.org/extensions/xep-0324.html>`__ | Internet of Things - Provisioning                         |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0325 <https://xmpp.org/extensions/xep-0325.html>`__ | Internet of Things - Control                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0326 <https://xmpp.org/extensions/xep-0326.html>`__ | Internet of Things - Concentrators                        |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0333 <https://xmpp.org/extensions/xep-0333.html>`__ | Chat Markers                                              |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0363 <https://xmpp.org/extensions/xep-0363.html>`__ | HTTP File Upload                                          |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+   | ✓       | `XEP-0387 <https://xmpp.org/extensions/xep-0387.html>`__ | XMPP Compliance Suites 2018                               |                                                              |
+   +---------+----------------------------------------------------------+-----------------------------------------------------------+--------------------------------------------------------------+
+
+.. __full_ordered_list_of_supported_rfcs_and_xeps:
+
 Full, ordered list of supported RFCs and XEPs:
-Support
-Specification
-Name
-Comment
-✓
-RFC6120
-Extensible Messaging and Presence Protocol (XMPP): Core
-✓
-RFC6120
-Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence
-⍻
-RFC7622
-Extensible Messaging and Presence Protocol (XMPP): Address Format
-We support previous version of the specification: RFC6122
-✓
-RFC7395
-An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
-✓
-RFC7395
-An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket
-✓
-RFC7590
-Use of Transport Layer Security (TLS) in the Extensible Messaging and Presence Protocol (XMPP)
-✓
-XEP-0004
-Data Forms
-✓
-XEP-0008
-IQ-Based Avatars
-✓
-XEP-0012
-Last Activity
-✓
-XEP-0013
-Flexible Offline Message Retrieval
-✓
-XEP-0016
-Privacy Lists
-✓
-XEP-0020
-Feature Negotiation
-✓
-XEP-0022
-Message Events
-✓
-XEP-0030
-Service Discovery
-✓
-XEP-0045
-Multi-User Chat
-✓
-XEP-0047
-In-Band Bytestreams
-✓
-XEP-0048
-Bookmarks
-✓
-XEP-0049
-Private XML Storage
-✓
-XEP-0050
-Ad-Hoc Commands
-✓
-XEP-0054
-vcard-temp
-✓
-XEP-0059
-Result Set Management
-✓
-XEP-0060
-Publish-Subscribe
-✓
-XEP-0065
-SOCKS5 Bytestreams
-✓
-XEP-0066
-Out of Band Data
-✓
-XEP-0068
-Field Standardization for Data Forms
-✓
-XEP-0071
-XHTML-IM
-✓
-XEP-0072
-SOAP Over XMPP
-✓
-XEP-0077
-In-Band Registration
-✓
-XEP-0078
-Non-SASL Authentication
-✓
-XEP-0079
-Advanced Message Processing
-✓
-XEP-0080
-User Location
-✓
-XEP-0082
-XMPP Date and Time Profiles
-✓
-XEP-0083
-Nested Roster Groups
-✓
-XEP-0084
-User Avatar
-✓
-XEP-0085
-Chat State Notifications
-✓
-XEP-0086
-Error Condition Mappings
-✓
-XEP-0091
-Legacy Delayed Delivery
-✓
-XEP-0092
-Software Version
-✓
-XEP-0096
-File Transfer
-✓
-XEP-0100
-Gateway Interaction
-✓
-XEP-0106
-JID Escaping
-✓
-XEP-0107
-User Mood
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0108
-User Activity
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0114
-Jabber Component Protocol
-✓
-XEP-0115
-Entity Capabilities
-✓
-XEP-0118
-User Tune
-Server support via Personal Eventing Protocol (XEP-0163)
-✓
-XEP-0124
-Bidirectional-streams Over Synchronous HTTP (BOSH)
-✓
-XEP-0128
-Service Discovery Extensions
-✓
-XEP-0127
-Common Alerting Protocol (CAP) Over XMPP
-✓
-XEP-0131
-Stanza Headers and Internet Metadata (SHIM)
-✓
-XEP-0133
-Service Administration
-✓
-XEP-0136
-Message Archiving
-✓
-XEP-0141
-Data Forms Layout
-✓
-XEP-0142
-Workgroup Queues
-✓
-XEP-0144
-Roster Item Exchange
-✓
-XEP-0145
-Annotations
-✓
-XEP-0146
-Remote Controlling Clients
-✓
-XEP-0152
-Reachability Addresses
-✓
-XEP-0153
-vCard-Based Avatars
-✓
-XEP-0155
-Stanza Session Negotiation
-✓
-XEP-0156
-Discovering Alternative XMPP Connection Methods
-Uses DNS records, so will work with Tigase XMPP Server
-✓
-XEP-0157
-Contact Addresses for XMPP Services
-✓
-XEP-0160
-Best Practices for Handling Offline Messages
-✓
-XEP-0163
-Personal Eventing Protocol
-✓
-XEP-0166
-Jingle
-✓
-XEP-0167
-Jingle RTP Sessions
-✓
-XEP-0170
-Recommended Order of Stream Feature Negotiation
-✓
-XEP-0171
-Language Translation
-✓
-XEP-0172
-User Nickname
-✓
-XEP-0174
-Serverless Messaging
-✓
-XEP-0175
-Best Practices for Use of SASL ANONYMOUS
-✓
-XEP-0176
-Jingle ICE-UDP Transport Method
-✓
-XEP-0177
-Jingle Raw UDP Transport Method
-✓
-XEP-0178
-Best Practices for Use of SASL EXTERNAL with Certificates
-✓
-XEP-0179
-Jingle IAX Transport Method
-✓
-XEP-0180
-Jingle Video via RTP
-✓
-XEP-0181
-Jingle DTMF
-✓
-XEP-0184
-Message Receipts
-✓
-XEP-0185
-Dialback Key Generation and Validation
-✓
-XEP-0190
-Best Practice for Closing Idle Streams
-✓
-XEP-0191
-Blocking Command
-✓
-XEP-0198
-Stream Management
-Both Session Resumption and Stanza Acknowledgements
-✓
-XEP-0199
-XMPP Ping
-✓
-XEP-0201
-Best Practices for Message Threads
-✓
-XEP-0202
-Entity Time
-✓
-XEP-0203
-Delayed Delivery
-✓
-XEP-0205
-Best Practices to Discourage Denial of Service Attacks
-✓
-XEP-0206
-XMPP Over BOSH
-✓
-XEP-0209
-Metacontacts
-✓
-XEP-0220
-Server Dialback
-✓
-XEP-0223
-Persistent Storage of Private Data via PubSub
-✓
-XEP-0224
-Attention
-✓
-XEP-0225
-Component Connections
-✓
-XEP-0226
-Message Stanza Profiles
-✓
-XEP-0231
-Bits of Binary
-✓
-XEP-0234
-Jingle File Transfer
-✓
-XEP-0245
-The /me Command
-✓
-XEP-0246
-End-to-End XML Streams
-✓
-XEP-0247
-Jingle XML Streams
-✓
-XEP-0249
-Direct MUC Invitations
-✓
-XEP-0250
-C2C Authentication Using TLS
-✓
-XEP-0251
-Jingle Session Transfer
-✓
-XEP-0260
-Jingle SOCKS5 Bytestreams Transport Method
-✓
-XEP-0261
-Jingle In-Band Bytestreams Transport
-✓
-XEP-0262
-Use of ZRTP in Jingle RTP Sessions
-✓
-XEP-0277
-Microblogging over XMPP
-✓
-XEP-0280
-Message Carbons
-✓
-XEP-0292
-vCard4 Over XMPP
-✓
-XEP-0301
-In-Band Real Time Text
-✓
-XEP-0305
-XMPP Quickstart
-✓
-XEP-0313
-Message Archive Management
-✓
-XEP-0323
-Internet of Things - Sensor Data
-✓
-XEP-0324
-Internet of Things - Provisioning
-✓
-XEP-0325
-Internet of Things - Control
-✓
-XEP-0326
-Internet of Things - Concentrators
-✓
-XEP-0333
-Chat Markers
-✓
-XEP-0352
-Client State Indication
-✓[1]
-XEP-0357
-Push Notifications
-✓
-XEP-0363
-HTTP File Upload
-✓
-XEP-0368
-SRV records for XMPP over TLS
-Requires adding DNS entries pointing to port 5223
-✓
-XEP-0387
-XMPP Compliance Suites 2018
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| Support | Specification                                            | Name                                                                                           | Comment                                                      |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `RFC6120 <https://tools.ietf.org/html/rfc6120>`__        | Extensible Messaging and Presence Protocol (XMPP): Core                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `RFC6120 <https://tools.ietf.org/html/rfc6120>`__        | Extensible Messaging and Presence Protocol (XMPP): Instant Messaging and Presence              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ⍻       | `RFC7622 <https://tools.ietf.org/html/rfc7622>`__        | Extensible Messaging and Presence Protocol (XMPP): Address Format                              | We support previous version of the specification: RFC6122    |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `RFC7395 <https://tools.ietf.org/html/rfc7395>`__        | An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `RFC7395 <https://tools.ietf.org/html/rfc7395>`__        | An Extensible Messaging and Presence Protocol (XMPP) Subprotocol for WebSocket                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `RFC7590 <https://tools.ietf.org/html/rfc7590>`__        | Use of Transport Layer Security (TLS) in the Extensible Messaging and Presence Protocol (XMPP) |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0004 <https://xmpp.org/extensions/xep-0004.html>`__ | Data Forms                                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0008 <https://xmpp.org/extensions/xep-0004.html>`__ | IQ-Based Avatars                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0012 <https://xmpp.org/extensions/xep-0012.html>`__ | Last Activity                                                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0013 <https://xmpp.org/extensions/xep-0013.html>`__ | Flexible Offline Message Retrieval                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0016 <https://xmpp.org/extensions/xep-0016.html>`__ | Privacy Lists                                                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0020 <https://xmpp.org/extensions/xep-0020.html>`__ | Feature Negotiation                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0022 <https://xmpp.org/extensions/xep-0022.html>`__ | Message Events                                                                                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0030 <https://xmpp.org/extensions/xep-0030.html>`__ | Service Discovery                                                                              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0045 <https://xmpp.org/extensions/xep-0045.html>`__ | Multi-User Chat                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0047 <https://xmpp.org/extensions/xep-0047.html>`__ | In-Band Bytestreams                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0048 <https://xmpp.org/extensions/xep-0048.html>`__ | Bookmarks                                                                                      |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0049 <https://xmpp.org/extensions/xep-0049.html>`__ | Private XML Storage                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0050 <https://xmpp.org/extensions/xep-0050.html>`__ | Ad-Hoc Commands                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0054 <https://xmpp.org/extensions/xep-0054.html>`__ | vcard-temp                                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0059 <https://xmpp.org/extensions/xep-0059.html>`__ | Result Set Management                                                                          |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0060 <https://xmpp.org/extensions/xep-0060.html>`__ | Publish-Subscribe                                                                              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0065 <https://xmpp.org/extensions/xep-0065.html>`__ | SOCKS5 Bytestreams                                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0066 <https://xmpp.org/extensions/xep-0066.html>`__ | Out of Band Data                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0068 <https://xmpp.org/extensions/xep-0068.html>`__ | Field Standardization for Data Forms                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0071 <https://xmpp.org/extensions/xep-0071.html>`__ | XHTML-IM                                                                                       |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0072 <https://xmpp.org/extensions/xep-0072.html>`__ | SOAP Over XMPP                                                                                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0077 <https://xmpp.org/extensions/xep-0077.html>`__ | In-Band Registration                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0078 <https://xmpp.org/extensions/xep-0078.html>`__ | Non-SASL Authentication                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0079 <https://xmpp.org/extensions/xep-0079.html>`__ | Advanced Message Processing                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0080 <https://xmpp.org/extensions/xep-0080.html>`__ | User Location                                                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0082 <https://xmpp.org/extensions/xep-0082.html>`__ | XMPP Date and Time Profiles                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0083 <https://xmpp.org/extensions/xep-0083.html>`__ | Nested Roster Groups                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0084 <https://xmpp.org/extensions/xep-0084.html>`__ | User Avatar                                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0085 <https://xmpp.org/extensions/xep-0085.html>`__ | Chat State Notifications                                                                       |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0086 <https://xmpp.org/extensions/xep-0086.html>`__ | Error Condition Mappings                                                                       |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0091 <https://xmpp.org/extensions/xep-0091.html>`__ | Legacy Delayed Delivery                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0092 <https://xmpp.org/extensions/xep-0092.html>`__ | Software Version                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0096 <https://xmpp.org/extensions/xep-0096.html>`__ | File Transfer                                                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0100 <https://xmpp.org/extensions/xep-0100.html>`__ | Gateway Interaction                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0106 <https://xmpp.org/extensions/xep-0106.html>`__ | JID Escaping                                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0107 <https://xmpp.org/extensions/xep-0107.html>`__ | User Mood                                                                                      | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0108 <https://xmpp.org/extensions/xep-0108.html>`__ | User Activity                                                                                  | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0114 <https://xmpp.org/extensions/xep-0114.html>`__ | Jabber Component Protocol                                                                      |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0115 <https://xmpp.org/extensions/xep-0115.html>`__ | Entity Capabilities                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0118 <https://xmpp.org/extensions/xep-0118.html>`__ | User Tune                                                                                      | Server support via ``Personal Eventing Protocol (XEP-0163)`` |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0124 <https://xmpp.org/extensions/xep-0124.html>`__ | Bidirectional-streams Over Synchronous HTTP (BOSH)                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0128 <https://xmpp.org/extensions/xep-0128.html>`__ | Service Discovery Extensions                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0127 <https://xmpp.org/extensions/xep-0127.html>`__ | Common Alerting Protocol (CAP) Over XMPP                                                       |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0131 <https://xmpp.org/extensions/xep-0131.html>`__ | Stanza Headers and Internet Metadata (SHIM)                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0133 <https://xmpp.org/extensions/xep-0133.html>`__ | Service Administration                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0136 <https://xmpp.org/extensions/xep-0136.html>`__ | Message Archiving                                                                              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0141 <https://xmpp.org/extensions/xep-0141.html>`__ | Data Forms Layout                                                                              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0142 <https://xmpp.org/extensions/xep-0142.html>`__ | Workgroup Queues                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0144 <https://xmpp.org/extensions/xep-0144.html>`__ | Roster Item Exchange                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0145 <https://xmpp.org/extensions/xep-0145.html>`__ | Annotations                                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0146 <https://xmpp.org/extensions/xep-0146.html>`__ | Remote Controlling Clients                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0152 <https://xmpp.org/extensions/xep-0152.html>`__ | Reachability Addresses                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0153 <https://xmpp.org/extensions/xep-0153.html>`__ | vCard-Based Avatars                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0155 <https://xmpp.org/extensions/xep-0155.html>`__ | Stanza Session Negotiation                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0156 <https://xmpp.org/extensions/xep-0156.html>`__ | Discovering Alternative XMPP Connection Methods                                                | Uses DNS records, so will work with Tigase XMPP Server       |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0157 <https://xmpp.org/extensions/xep-0157.html>`__ | Contact Addresses for XMPP Services                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0160 <https://xmpp.org/extensions/xep-0160.html>`__ | Best Practices for Handling Offline Messages                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0163 <https://xmpp.org/extensions/xep-0163.html>`__ | Personal Eventing Protocol                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0166 <https://xmpp.org/extensions/xep-0166.html>`__ | Jingle                                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0167 <https://xmpp.org/extensions/xep-0167.html>`__ | Jingle RTP Sessions                                                                            |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0170 <https://xmpp.org/extensions/xep-0170.html>`__ | Recommended Order of Stream Feature Negotiation                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0171 <https://xmpp.org/extensions/xep-0171.html>`__ | Language Translation                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0172 <https://xmpp.org/extensions/xep-0172.html>`__ | User Nickname                                                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0174 <https://xmpp.org/extensions/xep-0174.html>`__ | Serverless Messaging                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0175 <https://xmpp.org/extensions/xep-0175.html>`__ | Best Practices for Use of SASL ANONYMOUS                                                       |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0176 <https://xmpp.org/extensions/xep-0176.html>`__ | Jingle ICE-UDP Transport Method                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0177 <https://xmpp.org/extensions/xep-0177.html>`__ | Jingle Raw UDP Transport Method                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0178 <https://xmpp.org/extensions/xep-0178.html>`__ | Best Practices for Use of SASL EXTERNAL with Certificates                                      |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0179 <https://xmpp.org/extensions/xep-0179.html>`__ | Jingle IAX Transport Method                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0180 <https://xmpp.org/extensions/xep-0180.html>`__ | Jingle Video via RTP                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0181 <https://xmpp.org/extensions/xep-0181.html>`__ | Jingle DTMF                                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0184 <https://xmpp.org/extensions/xep-0184.html>`__ | Message Receipts                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0185 <https://xmpp.org/extensions/xep-0185.html>`__ | Dialback Key Generation and Validation                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0190 <https://xmpp.org/extensions/xep-0190.html>`__ | Best Practice for Closing Idle Streams                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0191 <https://xmpp.org/extensions/xep-0191.html>`__ | Blocking Command                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0198 <https://xmpp.org/extensions/xep-0198.html>`__ | Stream Management                                                                              | Both ``Session Resumption`` and ``Stanza Acknowledgements``  |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0199 <https://xmpp.org/extensions/xep-0199.html>`__ | XMPP Ping                                                                                      |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0201 <https://xmpp.org/extensions/xep-0201.html>`__ | Best Practices for Message Threads                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0202 <https://xmpp.org/extensions/xep-0202.html>`__ | Entity Time                                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0203 <https://xmpp.org/extensions/xep-0203.html>`__ | Delayed Delivery                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0205 <https://xmpp.org/extensions/xep-0205.html>`__ | Best Practices to Discourage Denial of Service Attacks                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0206 <https://xmpp.org/extensions/xep-0206.html>`__ | XMPP Over BOSH                                                                                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0209 <https://xmpp.org/extensions/xep-0209.html>`__ | Metacontacts                                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0220 <https://xmpp.org/extensions/xep-0220.html>`__ | Server Dialback                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0223 <https://xmpp.org/extensions/xep-0223.html>`__ | Persistent Storage of Private Data via PubSub                                                  |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0224 <https://xmpp.org/extensions/xep-0224.html>`__ | Attention                                                                                      |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0225 <https://xmpp.org/extensions/xep-0225.html>`__ | Component Connections                                                                          |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0226 <https://xmpp.org/extensions/xep-0226.html>`__ | Message Stanza Profiles                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0231 <https://xmpp.org/extensions/xep-0231.html>`__ | Bits of Binary                                                                                 |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0234 <https://xmpp.org/extensions/xep-0234.html>`__ | Jingle File Transfer                                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0245 <https://xmpp.org/extensions/xep-0245.html>`__ | The /me Command                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0246 <https://xmpp.org/extensions/xep-0246.html>`__ | End-to-End XML Streams                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0247 <https://xmpp.org/extensions/xep-0247.html>`__ | Jingle XML Streams                                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0249 <https://xmpp.org/extensions/xep-0249.html>`__ | Direct MUC Invitations                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0250 <https://xmpp.org/extensions/xep-0250.html>`__ | C2C Authentication Using TLS                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0251 <https://xmpp.org/extensions/xep-0251.html>`__ | Jingle Session Transfer                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0260 <https://xmpp.org/extensions/xep-0260.html>`__ | Jingle SOCKS5 Bytestreams Transport Method                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0261 <https://xmpp.org/extensions/xep-0261.html>`__ | Jingle In-Band Bytestreams Transport                                                           |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0262 <https://xmpp.org/extensions/xep-0262.html>`__ | Use of ZRTP in Jingle RTP Sessions                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0277 <https://xmpp.org/extensions/xep-0277.html>`__ | Microblogging over XMPP                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0280 <https://xmpp.org/extensions/xep-0280.html>`__ | Message Carbons                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0292 <https://xmpp.org/extensions/xep-0292.html>`__ | vCard4 Over XMPP                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0301 <https://xmpp.org/extensions/xep-0301.html>`__ | In-Band Real Time Text                                                                         |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0305 <https://xmpp.org/extensions/xep-0305.html>`__ | XMPP Quickstart                                                                                |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0313 <https://xmpp.org/extensions/xep-0313.html>`__ | Message Archive Management                                                                     |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0323 <https://xmpp.org/extensions/xep-0323.html>`__ | Internet of Things - Sensor Data                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0324 <https://xmpp.org/extensions/xep-0324.html>`__ | Internet of Things - Provisioning                                                              |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0325 <https://xmpp.org/extensions/xep-0325.html>`__ | Internet of Things - Control                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0326 <https://xmpp.org/extensions/xep-0326.html>`__ | Internet of Things - Concentrators                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0333 <https://xmpp.org/extensions/xep-0333.html>`__ | Chat Markers                                                                                   |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0352 <https://xmpp.org/extensions/xep-0352.html>`__ | Client State Indication                                                                        |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0357 <https://xmpp.org/extensions/xep-0357.html>`__ | Push Notifications                                                                             |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0363 <https://xmpp.org/extensions/xep-0363.html>`__ | HTTP File Upload                                                                               |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0368 <https://xmpp.org/extensions/xep-0368.html>`__ | SRV records for XMPP over TLS                                                                  | Requires adding DNS entries pointing to port 5223            |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+| ✓       | `XEP-0387 <https://xmpp.org/extensions/xep-0387.html>`__ | XMPP Compliance Suites 2018                                                                    |                                                              |
++---------+----------------------------------------------------------+------------------------------------------------------------------------------------------------+--------------------------------------------------------------+
+
+2.2.7. Tigase Custom Extensions
+===============================
+General features
+~~~~~~~~~~~~~~~~
+
+.. table 6:: Monitoring
+
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | Support | Name                           | Comment                                                                                                                                                                           |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓ [1]_  | AuditLog                       | Ability functionality to log important events in a system (loggins, message exchanges, calls)                                                                                     |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓ [1]_  | Anti Abuse                     | Fight stanza SPAM, DoS, brute-force attacks and other threats                                                                                                                     |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Virtual domains                | Ability to create and manage multiple virtual domains from a single instance and restart-less management                                                                          |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | MUC subscribe for offline push | Option to register permanently to the room to receive push notifications about new messages.                                                                                      |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Scripting API                  | Supports the Java Scripting API JSR-223                                                                                                                                           |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | JMX monitoring                 | Advanced monitoring the server via JMX protocol with an API for connecting custom monitors and TCP/IP end-point for connecting general purpose JMX tools                          |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | HTTP monitoring                | Basic monitoring via HTTP protocol                                                                                                                                                |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | XMPP Monitoring                | Pluggable, active monitoring via XMPP, retrieving detailed server statistics, receiving automatic notifications about possible problems discovered by the self-monitor mechanisms |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | SNMP Monitoring                | Advanced server monitoring via SNMP.                                                                                                                                              |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Bosh Cache                     | Bosh Session Cache - a feature to quickly reload user data - roster, presences and messages history by the web client (for example after web page reload)                         |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Clustering                     | Full clustering support for HA and LB with pluggabble clustering strategies for perfect optimising the cluster to the client’s system                                             |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Advanced Clustering Strategy   | Dedicated, specialised clustering strategy for best possible performance                                                                                                          |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | MUC Clustered                  | Support for clustering group chatrooms with various, pluggable strategies                                                                                                         |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | PubSub Clustered               | Support for clustering PubSub component with various, pluggable strategies                                                                                                        |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Mobile optimisations           | Optimizations designed for Mobile Devices                                                                                                                                         |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | OSGi                           | Support for running in OSGi environment, i.e. as embedded XMPP server in advanced application server                                                                              |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Dynamic rosters                | Ability to create users' rosters entries on the fly based on data retrieved from any sources                                                                                      |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Command line admin tools       | Commandline utility to manage server                                                                                                                                              |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Unified Archive                | An extension to XEP-0313 Message Archive Management, with greatly improved flexibility in terms of what can be archived.                                                          |
+   +---------+--------------------------------+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+
+
+Repositories/Databases
+~~~~~~~~~~~~~~~~~~~~~~
+
+.. table 7:: Repositories/Databases
+
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | Support | Name          | Comment                                                                                                                                                                 |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | DB per domain | Ability to have multiple databases for specific domains.                                                                                                                |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | PostgreSQL    | Full support for PostgreSQL database with database schemas excluding dedicated DB schema for PubSub component                                                           |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | MySQL         | Full support for MySQL database with database schemas, dedicated DB schema for PubSub component                                                                         |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | SQL Server    | Full support for MS SQL Server database with database schemas excluding dedicated DB schema for PubSub component, only in Tigase server version 3.x                     |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Derby DB      | Full support for built-in Derby database with database schemas excluding dedicated DB schema for PubSub component                                                       |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | JDBC          | Support for all JDBC enabled databases, although the database schemas are available for some databases                                                                  |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Drupal Auth   | Drupal authentication - the Tigase server can share user authentication database with Drupal CMS and authenticate users agains Drupal user database                     |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | Drupal Auth   | Close integration with Drupal CMS, the Tigase can send notifications to subscribed users about new posts, comments and can also publish short news information via XMPP |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+   | ✓       | LDAP-Auth     | LDAP Authentication Connector Supported                                                                                                                                 |
+   +---------+---------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+.. [1] Requires commercial license.

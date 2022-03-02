@@ -92,7 +92,7 @@ All Minor Features & Behavior Changes
 
 - '#server-1050<https://projects.tigase.net/issue/server-1050>'_: Database installation without root credentials
 
-- "#server-1062<https://projects.tigase.net/issue/server-1062>'_: Deprecate Element based Event-bus
+- '#server-1062<https://projects.tigase.net/issue/server-1062>'_: Deprecate Element based Event-bus
 
 - #server-1097: It’s not possible to configure additional PacketFilters
 
@@ -222,9 +222,9 @@ All Minor Features & Behavior Changes
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Major Changes
-~~~~~~~~~~~~
+~~~~~~~~~~~~~~
 
-This is the introductory version of MIX specification 'family<https://xmpp.org/extensions/xep-0369.html#family>'_
+This is the introductory version of 'MIX specification family<https://xmpp.org/extensions/xep-0369.html#family>'_
 
 All Changes
 ~~~~~~~~~~~~
