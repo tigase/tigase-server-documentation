@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TigaseDoc'
-copyright = '2004-2022'
+copyright = '2004-2022, Tigase, Inc.'
 author = 'Tigase, Inc.'
 
 # The full version, including alpha/beta/rc tags
