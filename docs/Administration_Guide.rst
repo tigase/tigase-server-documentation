@@ -1823,3 +1823,558 @@ Both ports should be setup to use TCP only. If for any reason you want to make s
    .. code:: bash
 
       iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 5291
+
+2.5.6. Tigase Server Network Instructions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As mentioned in each of the quick start sections, each distribution of Tigase XMPP server comes with a number of scripts that are customized for different versions of Linux.
+
+.. table:: init.d chart
+
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+   | Operating system | init.d file path                                 | Types of Operating Systems                                                                                      |
+   +==================+==================================================+=================================================================================================================+
+   | Systemd          | ``tigase-server/scripts/systemd/*``              | Systemd-based distributions                                                                                     |
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+   | Debian           | ``tigase-server/scripts/debian/tigase.init.d``   | Knoppix, Ubuntu (before v15.04), Raspbian or Duvian                                                             |
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+   | Gentoo           | ``tigase-server/scripts/gentoo/init.d/tigase``   | CoreOS (before v94.0.0), Tin Hat Linux or other \*too based systems                                             |
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+   | Mandriva         | ``tigase-server/scripts/mandriva/init.d/tigase`` | Specific init.d file for Mandriva Linux                                                                         |
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+   | Redhat           | ``tigase-server/scripts/redhat/init.d/tigase``   | RedHat (before v7.0) and other RPM based linux derivatives like CentOS (before v.7.14), openSUSE (before v12.2) |
+   +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
+
+..
+
+   **Note**
+
+   If your operating system is a systemd-based linux distribution, we recommend to use systemd service scripts. It may be possible to use (in this case legacy) ``init.d`` startup files as before, but usage of systemd startup scripts will allow better control of the startup process and will even allow for automatic restart of the Tigase XMPP Server in the case of JVM crash.
+
+
+Configuration: For Linux Distributions using systemd
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To set up Tigase XMPP Server as a system service it is required to copy ``tigase-server.service`` file to ``/etc/systemd/system/`` directory
+
+.. code:: bash
+
+   sudo cp $SCRIPT_FILE_PATH/tigase-server.service /etc/systemd/system/
+
+This file contains following parameters which may need to be adjusted:
+
+-  ``User`` - Specifies the user that will run the program. This should be a user with SU permissions.
+
+-  ``WorkingDirectory`` - Specifies installation directory *(default: ``/home/tigase/tigase-server``)*
+
+-  ``ExecStart`` - Specifies startup command *(default: runs ``scripts/tigase.sh start etc/tigase.conf`` in the Tigase installation directory)*
+
+-  ``ExecStop`` - Specifies shutdown command *(default: runs ``scripts/tigase.sh stop etc/tigase.conf`` in the Tigase installation directory)*
+
+-  ``PIDFile`` - Specifies location of the PID file *(default: ``logs/tigase.pid`` file in the Tigase installation directory)*
+
+It is also required to copy options file ``tigase-server`` to ``/etc/default/`` directory
+
+.. code:: bash
+
+   sudo cp $SCRIPT_FILE_PATH/tigase-server /etc/default/
+
+With those files in place you need to reload ``systemctl`` daemon
+
+.. code:: bash
+
+   sudo systemctl daemon-reload
+
+..
+
+   **Note**
+
+   If you are upgrading from the previous version of the Tigase XMPP Server which was not running as the systemd system service it is required to uninstall old service and remove old service files.
+
+
+Configuration: For All Linux Distributions
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Once you’ve located the appropriate distribution scripts (please take a look at the table above), copy it to your system’s init.d folder (usually it’s ``/etc/init.d/``):
+
+.. code:: bash
+
+   sudo cp $SCRIPT_FILE_PATH /etc/init.d/tigase
+
+You may also need to make it executable:
+
+.. code:: bash
+
+   sudo chmod +x /etc/init.d/tigase
+
+It is recommended that you open the script files or configuration files as some have some parameters that you will need to specify.
+
+
+Gentoo
+'''''''
+
+The conf.d script must contain the following parameters:
+
+.. code:: conf
+
+   TIGASE_HOME="/home/tigase/tigase-server"
+   TIGASE_USER=tigase
+   TIGASE_CONF="etc/tigase.conf"
+
+The following should be configured:
+
+-  ``TIGASE_HOME`` - Specifies the Tigase Server installation directory.
+
+-  ``TIGASE_USER`` - Specifies the user that will run the program. This should be a user with SU permissions.
+
+-  ``TIGASE_CONF`` - The location of tigase.conf file, relative to the ``TIGASE_HOME`` directory.
+
+
+Mandriva
+'''''''''
+
+Mandriva has a single init.d file, however it should be configured:
+
+.. code:: bash
+
+   …
+   export JAVA_HOME=/usr/java/jdk1.8.0
+   export TIGASE_DIR=/opt/tigase/server/
+   tigase=$TIGASE_DIR/scripts/tigase.sh
+   prog=tigase
+   config=$TIGASE_DIR/etc/tigase.conf
+   …
+
+The following should be configured:
+
+-  ``JAVA_HOME`` - The location of your JDK Installation.
+
+-  ``TIGASE_DIR`` - Tigase Server installation directory.
+
+-  ``tigase`` - The location of your tigase.sh script. This should not need adjusting if you maintain the default file structure.
+
+-  ``config`` - The location of your tigase.conf file. This should not need adjusting if you maintain the default file structure.
+
+``pid`` file will be stored in ``/var/run/ser.pid``
+
+
+Redhat
+'''''''
+
+Similar to Mandriva, you will need to configure the init.d file:
+
+.. code:: bash
+
+   …
+   JAVA_HOME=/usr/lib/jvm/java/
+
+   USERNAME=tigase
+   USERGROUP=tigase
+   NAME=tigase
+   DESC="Tigase XMPP server"
+
+   TIGASE_HOME=/home/tigase/tigase-server
+   TIGASE_LIB=${TIGASE_HOME}/jars
+   TIGASE_CONFIG=/etc/tigase.conf
+   TIGASE_OPTIONS=
+   TIGASE_PARAMS=
+
+   PIDFILE=
+   TIGASE_CONSOLE_LOG=
+   …
+
+-  ``USERNAME`` - Username running Tigase, should have su permissions.
+
+-  ``USERGROUP`` - The usergroup of the username.
+
+-  ``NAME`` - OS name for Tigase program.
+
+-  ``DESC`` - Optional description.
+
+-  ``TIGASE_HOME`` - The location of your Tigase Server installation directory.
+
+-  ``TIGASE_LIB`` - The location of your Tigase Jars folder, you should not need to adjust this if you set ``TIGASE_HOME`` properly, and maintain the default file structure.
+
+-  ``TIGASE_CONFIG`` - The location of your tigase.conf file relative to ``TIGASE_HOME``
+
+-  ``TIGASE_OPTIONS`` - Legacy options for Tigase, most are now handled in ``config.tdsl`` or tigase.conf.
+
+-  ``TIGASE_PARAMS`` - Parameters passed to command line when launching Tigase.
+
+-  ``PIDFILE`` - Location of Tigase PID file if you wish to use custom directory. Default will be located in /logs or /var/temp directory.
+
+-  ``TIGASE_CONSOLE_LOG`` - Location of Tigase Server console log file if you wish to use a custom directory. Default will be located in /logs directory, failing that /dev/null.
+
+After you’ve copied the script, in order to install sysinit script you have to add it to the configuration:
+
+.. code:: bash
+
+   /sbin/chkconfig --add tigase
+
+Service can be enabled or disabled service with:
+
+.. code:: bash
+
+   /sbin/chkconfig tigase <on|off|reset>
+
+Debian
+'''''''
+
+As with other distributions you should copy init.d script to the correct location. Afterwards it should be edited and correct values for variables need to be set:
+
+.. code:: bash
+
+   …
+   USERNAME=tigase
+   USERGROUP=tigase
+   NAME=tigase
+   DESC="Tigase XMPP server"
+
+   TIGASE_HOME=/usr/share/tigase
+   TIGASE_CONFIG=/etc/tigase/tigase.config
+   TIGASE_OPTIONS=
+   TIGASE_PARAMS=
+
+   PIDFILE=
+   TIGASE_CONSOLE_LOG=
+   …
+
+-  ``USERNAME`` - Username running Tigase, should have su permissions.
+
+-  ``USERGROUP`` - The usergroup of the username.
+
+-  ``NAME`` - OS name for Tigase program.
+
+-  ``DESC`` - Optional description.
+
+-  ``TIGASE_HOME`` - The location of your Tigase Server installation directory.
+
+-  ``TIGASE_CONFIG`` - The location of your tigase-server.xml file relative (old configuration format)
+
+-  ``TIGASE_OPTIONS`` - command line arguments passed to Tigase server (which may include path to ``init.properies`` (if correct ``tigase.conf`` configuration will be found then it will translate to ``TIGASE_OPTIONS=" --property-file etc/config.tdsl "``
+
+-  ``TIGASE_PARAMS`` - Parameters passed to command line when launching Tigase.
+
+-  ``PIDFILE`` - Location of Tigase PID file if you wish to use custom directory. Default will be located in ``/var/run/tigase/tigase.pid`` or under (in this case relative to tigase home directory)\ ``logs/tigase.pid``.
+
+-  ``TIGASE_CONSOLE_LOG`` - Location of Tigase Server console log file if you wish to use a custom directory. Default will be located in /logs directory, failing that /dev/null.
+
+Afterwards we need to install service in the system with following command:
+
+.. code:: bash
+
+   update-rc.d tigase defaults
+
+
+Running Tigase as a system service
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are a number of benefits to running Tigase as a service, one of which is to ensure that the program will run even in the event of a power outage or accidental server restart, Tigase will always be up and running.
+
+
+For systemd-based linux distributions
+''''''''''''''''''''''''''''''''''''''
+
+Once installation is complete you may start Tigase as a typical systemd service using following command:
+
+.. code:: bash
+
+   sudo systemctl start tigase-server
+
+To stop it, you may run following command:
+
+.. code:: bash
+
+   sudo systemctl stop tigase-server
+
+It is also possible to enable service, to make it start during startup of the operating system:
+
+.. code:: bash
+
+   sudo systemctl enable tigase-server
+
+
+For other linux distributions
+''''''''''''''''''''''''''''''
+
+Once installation is complete, you should be able to start Tigase using the following command:
+
+.. code:: bash
+
+   service tigase start
+
+Tigase should begin running in the background. Since Tigase is now installed as a service, it can be controlled with any of the service commands, such as:
+
+-  ``service tigase stop``
+
+-  ``service tigase restart``
+
+2.5.8. Shutting Down Tigase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although Tigase XMPP Server can be terminated by ending the process, it is preferred and recommended to use it’s own shutdown scripts instead. Not only does this allow for a proper purge of Tigase form the system, but allows for all shutdown functions to operate, such as amending logs and completing statistics. To trigger a shutdown of Tigase server, the following command can be used from the tigase directory:
+
+.. code:: bash
+
+   ./scripts/tigase.sh stop
+
+You may specify the config file if you want, but it will make no differences
+
+This will:
+
+-  Begin shutdown thread
+
+-  Stop accepting new connections
+
+-  Close all current connections
+
+-  Collect runtime statistics
+
+-  Write statistics to log
+
+-  Dump full stacktrace to a file
+
+-  Run GC and clear from memory
+
+
+Shutdown statistics
+~~~~~~~~~~~~~~~~~~~~
+
+Upon shutdown, statistics for the server’s runtime will be appended to the log file. For a description of the statistics and what they mean, refer to the `Statistics Description <#statsticsDescription>`__ portion of the documentation.
+
+Shutdown StackTrace Dump
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To aid with troubleshooting purposes, the full stacktrace will be dumped to a seperate file located at $serverdir/logs/threads-dump.log.# Stacktrace logs will follow the same log file numbering scheme described in `Log file description <#logs>`__.
+
+This feature is enabled by default, however you may disable this by adding the following to your ``config.tdsl`` file:
+
+.. code:: dsl
+
+   'shutdown-thread-dump' = false
+
+
+Shutting Down Cluster Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Starting with v8.0.0 you can now shut down individual cluster nodes without shutting down the whole server. This command will use the *SeeOtherHost* strategy to direct traffic to other nodes and update the cluster map to gracefully shut down the single node
+
+Shutting down individual nodes can be done VIA Ad-hoc command and fill out the response forms. The command is available from message-router as http://jabber.org/protocol/admin#shutdown.
+
+2.5.8. Shutting Down Tigase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Although Tigase XMPP Server can be terminated by ending the process, it is preferred and recommended to use it’s own shutdown scripts instead. Not only does this allow for a proper purge of Tigase form the system, but allows for all shutdown functions to operate, such as amending logs and completing statistics. To trigger a shutdown of Tigase server, the following command can be used from the tigase directory:
+
+.. code:: bash
+
+   ./scripts/tigase.sh stop
+
+You may specify the config file if you want, but it will make no differences
+
+This will:
+
+-  Begin shutdown thread
+
+-  Stop accepting new connections
+
+-  Close all current connections
+
+-  Collect runtime statistics
+
+-  Write statistics to log
+
+-  Dump full stacktrace to a file
+
+-  Run GC and clear from memory
+
+
+Shutdown statistics
+~~~~~~~~~~~~~~~~~~~~
+
+Upon shutdown, statistics for the server’s runtime will be appended to the log file. For a description of the statistics and what they mean, refer to the `Statistics Description <#statsticsDescription>`__ portion of the documentation.
+
+
+Shutdown StackTrace Dump
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To aid with troubleshooting purposes, the full stacktrace will be dumped to a seperate file located at $serverdir/logs/threads-dump.log.# Stacktrace logs will follow the same log file numbering scheme described in `Log file description <#logs>`__.
+
+This feature is enabled by default, however you may disable this by adding the following to your ``config.tdsl`` file:
+
+.. code:: dsl
+
+   'shutdown-thread-dump' = false
+
+
+Shutting Down Cluster Nodes
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Starting with v8.0.0 you can now shut down individual cluster nodes without shutting down the whole server. This command will use the *SeeOtherHost* strategy to direct traffic to other nodes and update the cluster map to gracefully shut down the single node
+
+Shutting down individual nodes can be done VIA Ad-hoc command and fill out the response forms. The command is available from message-router as http://jabber.org/protocol/admin#shutdown.
+
+2.5.9. Upgrading to v8.0.0 from v7.1.0
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+There have been a number of changes to the user and auth databases since v7.1.0. As a result, if you are upgrading from older versions, you will need to follow this guide.
+
+   **Note**
+
+   We recommend installing Tigase XMPP Server 8.0.0 in a separate directory.
+
+
+Backup your data
+~~~~~~~~~~~~~~~~~
+
+As with any migration it is highly recommended that you backup your repository before conducting any upgrade operations.
+
+For MySQL databases:
+
+.. code:: bash
+
+   mysqldump [dbname] --routines -u [username] -p [password] > [filename].sql
+
+
+Setup Tigase XMPP Server 8.0.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+After downloading Tigase XMPP Server 8.0.0 from our website, or using wget, extract the files to a separate directory.
+
+Copy the ``tigase.conf`` and ``init.properties`` files from the old directory to v8.0.0 directory.
+
+.. code:: bash
+
+   cd tigase-server-8.0.0
+   cp ../tigase-server/etc/tigase.conf etc/
+   cp ../tigase-server/etc/init.properties etc/
+
+Import the database.
+
+.. code:: bash
+
+   mysql -h [host address] [dbname] -u [username] -p [password] < [filename].sql
+   mysql -h 198.27.120.213 tigase_tpub -u USERNAME -p <../tpub.2017-05-30.sql
+   Enter password:
+
+
+Upgrade configuration file
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tigase XMPP Server has a utility that can be called using ``upgrade-config`` that will update your old ``init.properties`` file and create a new file using DSL.
+
+.. code:: bash
+
+   ./scripts/tigase.sh upgrade-config etc/tigase.conf
+
+When everything is ready it will printout following information
+
+::
+
+   =============================================================================
+     Configuration file etc/init.properties was converted to DSL format.
+     Previous version of a configuration file was saved at etc/init.properties.old
+   =============================================================================
+
+
+Connect new database
+~~~~~~~~~~~~~~~~~~~~~
+
+Edit your new ``config.tdsl`` file to connect to the new database you created during the import step.
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://localhost/tigase_tpub?user=tigase_user&password=mypass'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+
+Upgrade Database schema
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Upgrading database schemas is now possible using the ``upgrade-schema`` option. Do this now.
+
+.. code:: bash
+
+   ./scripts/tigase.sh upgrade-schema etc/tigase.conf
+
+..
+
+   **Warning**
+
+   Your database schema MUST be v8 or conversion will not occur properly!
+
+You will be asked the following prompts:
+
+.. code:: bash
+
+   Database root account username used to create tigase user and database at 198.27.120.213 :
+
+   Database root account password used to create tigase user and database at 198.27.120.213 :
+
+Upon success, you should see the following:
+
+.. code:: bash
+
+   =============================================================================
+           Schema upgrade finished
+
+     Data source: default with uri
+   jdbc:mysql://HOST/DATABASE?user=USERNAME&password=PASSWORD
+           Checking connection to database ok
+           Checking if database exists     ok
+           Loading schema: Tigase XMPP Server (Core), version: 8.0.0       ok
+           Loading schema: Tigase Message Archiving Component, version: 1.3.0      ok
+           Loading schema: Tigase MUC Component, version: 2.5.0    ok
+           Loading schema: Tigase PubSub Component, version: 3.3.0 ok
+           Adding XMPP admin accounts      warning
+                   Message: Error: No admin users entered
+           Post installation action        ok
+
+   =============================================================================
+
+Start Tigase!
+
+
+Help?
+~~~~~
+
+Both ``upgrade`` commands also have a build in help function, they can be called if needed from the command line. You can also run these commands for help.
+
+::
+
+   scripts/tigase.sh upgrade-config etc/tigase.conf --help
+   scripts/tigase.sh upgrade-schema etc/tigase.conf --help
+
+
+Upgrade/Restore with a script [experimental!]
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To make upgrade process easier it’s possible to utilize `tigase-upgrade.sh <files/tigase-upgrade.sh>`__ \*nix shell script. It permits upgrading to new version (supports downloading version from provided URL).
+
+It’s usage is as follows:
+
+.. code:: bash
+
+   ./tigase-upgrade.sh {upgrade|rollback} install_package install_directory [tar|dir]
+
+Where: \* ``{upgrade|rollback}`` - defines whether to perform upgrade or rollback to previous version \* ``install_package`` - package to which perform upgrade (can be URL) in case of upgrade or backed-up installation (from which we want to restore) in case of rollback \* ``install_directory`` - destination directory (both in upgrade and rollback); can be symlink in which case it will be preserved with upgraded/restored path as target \* ``[tar|dir]`` - (optional) type of backup (either simply copy directory or also archive it using ``tar`` command); by default ``dir`` is used.
+
+To upgrade installation to version ``tigase-server-8.0.0-SNAPSHOT-b5285-dist-max.tar.gz`` execute the script as follows:
+
+.. code:: bash
+
+   $ ./tigase-upgrade.sh upgrade tigase-server-8.0.0-SNAPSHOT-b5285-dist-max.tar.gz tigase-server
+
+To rollback from ``tigase-server-8.0.0-SNAPSHOT-b5264_backup-18-11-05_1712`` backup execute script as follows:
+
+.. code:: bash
+
+   bash -x ./tigase-upgrade.sh rollback tigase-server-8.0.0-SNAPSHOT-b5264_backup-18-11-05_1712/ tigase-server
