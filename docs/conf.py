@@ -18,8 +18,8 @@
 # -- Project information -----------------------------------------------------
 
 project = 'TigaseDoc'
-copyright = '2021, Qian Luo'
-author = 'Qian Luo'
+copyright = '2004-2022'
+author = 'Tigase, Inc.'
 
 # The full version, including alpha/beta/rc tags
 release = '0.1'
