@@ -8,6 +8,7 @@ Tigase Administration Guide
     :maxdepth: 2
 
     Release_Notes
+    Administration_Guide
 
 
 
