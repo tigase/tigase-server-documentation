@@ -4,7 +4,6 @@ Tigase Administration Guide
 Tigase Team- team@tigase.com  - Version 8.3.0
 ==============================================
 
-Version:  V8.3.0
 
 1. Tigase XMPP Server 8.3.0 Release Notes
 ==========================================
