@@ -950,7 +950,7 @@ With these considerations in mind, we provide nightly builds at `this link <http
 
 Standard naming format is ``tigase-server-<version>-SNAPSHOT-b<build>-<type>`` where ``<version>`` is in the form of ``major.minor.bugfix``
 
-   **Note**
+.. Note::
 
    individual days may have the same builds as noted by the byyyy section of the file.\*
 
@@ -982,11 +982,11 @@ Before you begin installing Tigase server onto your system, please make sure the
 
 ..
 
-   **Important**
+.. Important::
 
    You should always run the latest point/bugfix release of the recommended JDK.
 
-   **Note**
+.. Note::
 
    While it should be possible to use newer versions of the JDK, we don’t guarantee it and we recommend using the one mentioned above.
 
@@ -1022,9 +1022,9 @@ First download Tigase XMPP Server and extract it. You can download the `official
    $ tar -xf tigase-server-<version>-dist-max.tar.gz
    $ cd tigase-server-<version>
 
-..
 
-   **Tip**
+
+.. Tip::
 
    Do not run as root user!
 
@@ -1032,7 +1032,7 @@ First download Tigase XMPP Server and extract it. You can download the `official
 Start the Server
 ~~~~~~~~~~~~~~~~~
 
-   **Note**
+.. Note::
 
    Please make sure ``JAVA_HOME`` is set and points to your JVM installation
 
@@ -1084,7 +1084,7 @@ Read it and then click "Next"
 
 The setup consists of several steps that help you configure your installation: selecting features and providing database configuration.
 
-   **Note**
+.. Note::
 
    Order and design of the steps may slightly differ thus we only provide a broad overview of how to proceed:
 
@@ -1147,9 +1147,8 @@ It is recommended at this point to stop the server manually and restart it using
 
    ./scripts/tigase.sh start etc/tigase.conf
 
-..
 
-   **Note**
+.. Note::
 
    In order to make Tigase XMPP Server start automatically during system startup you should setup startup scripts as described in `??? <#tigaseScriptStart>`__
 
@@ -1196,7 +1195,7 @@ In many cases however it is not always possible to use the web installer. In man
 
 If you have an old version of the Tigase server running and working and you intend to upgrade it please always backup the old version first.
 
-   **Note**
+.. Note::
 
    Please note that these instructions are for \*nix operating systems, and some modifications may be required for other Operating Systems!
 
@@ -1822,8 +1821,8 @@ Both ports should be setup to use TCP only. If for any reason you want to make s
 
       iptables -t nat -A PREROUTING -p tcp --dport 443 -j REDIRECT --to-ports 5291
 
-2.5.6. Tigase Server Network Instructions
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+2.5.7. Tigase Script Selection
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 As mentioned in each of the quick start sections, each distribution of Tigase XMPP server comes with a number of scripts that are customized for different versions of Linux.
 
@@ -1843,9 +1842,9 @@ As mentioned in each of the quick start sections, each distribution of Tigase XM
    | Redhat           | ``tigase-server/scripts/redhat/init.d/tigase``   | RedHat (before v7.0) and other RPM based linux derivatives like CentOS (before v.7.14), openSUSE (before v12.2) |
    +------------------+--------------------------------------------------+-----------------------------------------------------------------------------------------------------------------+
 
-..
 
-   **Note**
+
+.. Note::
 
    If your operating system is a systemd-based linux distribution, we recommend to use systemd service scripts. It may be possible to use (in this case legacy) ``init.d`` startup files as before, but usage of systemd startup scripts will allow better control of the startup process and will even allow for automatic restart of the Tigase XMPP Server in the case of JVM crash.
 
@@ -2217,7 +2216,7 @@ Shutting down individual nodes can be done VIA Ad-hoc command and fill out the r
 
 There have been a number of changes to the user and auth databases since v7.1.0. As a result, if you are upgrading from older versions, you will need to follow this guide.
 
-   **Note**
+.. Note::
 
    We recommend installing Tigase XMPP Server 8.0.0 in a separate directory.
 
@@ -2269,10 +2268,10 @@ When everything is ready it will printout following information
 
 ::
 
-   =============================================================================
+   ===============================================================================
      Configuration file etc/init.properties was converted to DSL format.
      Previous version of a configuration file was saved at etc/init.properties.old
-   =============================================================================
+   ===============================================================================
 
 
 Connect new database
@@ -2303,11 +2302,11 @@ Upgrading database schemas is now possible using the ``upgrade-schema`` option. 
 
    ./scripts/tigase.sh upgrade-schema etc/tigase.conf
 
-..
 
-   **Warning**
 
-   Your database schema MUST be v8 or conversion will not occur properly!
+.. Warning::
+
+    Your database schema MUST be v8 or conversion will not occur properly!
 
 You will be asked the following prompts:
 
@@ -2449,7 +2448,8 @@ We also use block between ``{}`` chars to define properties which are related to
 Which means this properties will be passed only to this instance of Tigase PubSub Component, same as it was before where we needed to add prefix.
 Entries after ``\#`` are comments, to pass ``#`` you need to wrap whole part containing it in ``''``, ie. ``'test#242'``
 
-WARNING: If a string value assigned to a property contains any char from a following list ``=:,[]#+-*/`` it needs to be wrapped in a ``''``.
+.. WARNING:: 
+    If a string value assigned to a property contains any char from a following list ``=:,[]#+-*/`` it needs to be wrapped in a ``''``.
 
 Why DSL?
 ~~~~~~~~
@@ -2503,7 +2503,7 @@ It is recommended that properties of bean would be placed in separate lines with
 
 .. important::
 
-   Usage of ``()`` block is very important. When this block is used in configuration it automatically sets ``active`` property of bean definition for bean for which it is used to to `true`. This is done due to fact that default value of ``active` is ``true``.
+   Usage of ``()`` block is very important. When this block is used in configuration it automatically sets ``active`` property of bean definition for bean for which it is used to to `true`. This is done due to fact that default value of ``active`` is ``true``.
 
    If you omit it in configuration, you will set bean configuration but it may remain ``inactive``. In this state bean will not be loaded and as a result will not be used by Tigase XMPP Server.
 
@@ -2531,6 +2531,7 @@ as an object
    Using this format you set list as a list and integer is set as an integer.
 
 .. table::
+
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Type        | Description                                                                                                                                                                                                            |
 +=============+========================================================================================================================================================================================================================+
@@ -2582,7 +2583,9 @@ as an object
 
 as a plain string
    Very similar to properties based configuration, in fact values are passed in same format and later are converted to correct type by checking type expected by bean. *(Not recommended)*
+
 .. table::
+
 +-------------+-----------------------------------------------------------------------------------------------+
 | Type        | Description                                                                                   |
 +=============+===============================================================================================+
@@ -2625,7 +2628,7 @@ environment variable
 
 ..
 
-   Warning::
+.. Warning::
 
     For properties which accepts lists it is not allowed to set value using variable/property with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') ]``. It needs to be set in following way ``property = env('some-variable')``
  
@@ -2658,7 +2661,7 @@ With DSL configuration format we introduce support for computable values for pro
 
 ..
 
-   Warning::
+   warning::
 
     For properties which accepts lists it is not allowed to set value using computed values with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') + ',other-value' ]``. It needs to be set in following way ``property = env('some-variable') + ',other-value'``.
 
@@ -4246,7 +4249,7 @@ Generating your Own Certificates
 
 Self-signed certificates can be generated easily on a Linux system. Although it may not be considered a 'trusted' certificate authority, it can be useful to test server installations. **We do not recommend regular use of self-signed certificates**.
 
-   **Note**
+.. Note:: 
 
    that Tigase v5.0 and later can automatically create self signed PEM files if needed. However we will cover doing this process by hand.
 
@@ -4338,7 +4341,9 @@ The result file should looks similar to:
 
 For Tigase server as well as many other servers (Apache 2.x), the order is following; your domain certificate, your private key, authority issuing your certificate, root certificate.
 
-**Note! Tigase requires full certificate chain in PEM file (described above)! Different applications may require pem file with certificates and private key in different order. So the same file may not be necessarily used by other services like Web server or e-mail server. Currently, Tigase can automatically sort certificates in PEM file while loading it.**
+.. NOTE::
+
+   Tigase requires full certificate chain in PEM file (described above)! Different applications may require pem file with certificates and private key in different order. So the same file may not be necessarily used by other services like Web server or e-mail server. Currently, Tigase can automatically sort certificates in PEM file while loading it.**
 
 
 Installing/Loading Certificate To the Tigase Server
@@ -4371,7 +4376,7 @@ We **highly** recommend using LetsEncrypt keys to self-sign and secure your doma
 Using one certificate for multiple domains
 ''''''''''''''''''''''''''''''''''''''''''
 
-   **Note**
+.. Note::
 
    Tigase tries to be *smart* and automatically detects wildcard domain and alternative domains so it’s not needed to duplicate same certificate in multiple files to match domains - same file will be loaded and make available for all domains (CNames) available in the certificate.
 
