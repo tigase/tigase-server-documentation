@@ -2393,9 +2393,10 @@ From Tigase XMPP Server 8.0.0 release it will be required to use new DSL based c
 
 why new format?
 ~~~~~~~~~~~~~~~~
+
 In properties configuration format each line contained key and value with optional definition of type of stored value:
 
-::
+.. code::
 
    c2s/ports[i]=5222,5223
 
@@ -2406,7 +2407,7 @@ From that you can see that it was domain based setting of properties.
 
 Except from this multi-part keys we also used properties starting with `--` which were global properties accessible for every part of application, i.e.: to add new component and set some properties you needed to write:
 
-::
+.. code::
 
    --comp-name-1=pubsub
    --comp-class-1=tigase.pubsub.PubSubComponent
@@ -2427,7 +2428,7 @@ Now we use domain based configuration which means that our configuration file is
 
 To illustrate it better let's start with a simple example. In properties file in order to configure PubSub component named `pubsub` you would use following properties:
 
-::
+.. code::
 
    --comp-name-1=pubsub
    --comp-class-1=tigase.pubsub.PubSubComponent
@@ -2435,7 +2436,7 @@ To illustrate it better let's start with a simple example. In properties file in
 
 In DSL based configuration this would be replaced by following block
 
-::
+.. code::
 
    pubsub (class: tigase.pubsub.PubSubComponent) {
        # comment
@@ -2452,6 +2453,7 @@ WARNING: If a string value assigned to a property contains any char from a follo
 
 Why DSL?
 ~~~~~~~~
+
 DSL configuration format provides a number of advantages over the old system of configuration.
 . All configurations for components are related in a single block, so they are not spread out over several different lines.
 . No need for long property names, no longer have to invoke a long string of settings for multiple values.
@@ -2471,6 +2473,7 @@ After some experience with DSL format, you'll find it's far more intuitive and u
 
 Setting property
 '''''''''''''''''
+
 To set property you just write property name followed by `=` and value to set. This is always done in context of bean which configuration property you want to set.
 
 ::
