@@ -2392,7 +2392,7 @@ In previous Tigase XMPP Server releases configuration was stored in properties b
 From Tigase XMPP Server 8.0.0 release it will be required to use new DSL based configuration file format. This file format was inspired by Groovy language syntax and new core feature of Tigase XMPP Server - Tigase Kernel Framework.
 
 why new format?
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~
 
 In properties configuration format each line contained key and value with optional definition of type of stored value:
 
@@ -2400,12 +2400,11 @@ In properties configuration format each line contained key and value with option
 
    c2s/ports[i]=5222,5223
 
-where `c2s/ports` was name of property, `[i]` defined that type of value is array of integers, and `5222,5223` was comma separated list of values.
+where ``c2s/ports`` was name of property, ``[i]`` defined that type of value is array of integers, and ``5222,5223`` was comma separated list of values.
 
-This format worked but in fact `c2s/ports` was not name of property you configured but key which was later split on `/` char to parts which defined by names path to property which name was in last part.
-From that you can see that it was domain based setting of properties.
+This format worked but in fact ``c2s/ports`` was not name of property you configured but key which was later split on ``/`` char to parts which defined by names path to property which name was in last part.From that you can see that it was domain based setting of properties.
 
-Except from this multi-part keys we also used properties starting with `--` which were global properties accessible for every part of application, i.e.: to add new component and set some properties you needed to write:
+Except from this multi-part keys we also used properties starting with ``--`` which were global properties accessible for every part of application, i.e.: to add new component and set some properties you needed to write:
 
 .. code::
 
@@ -2422,11 +2421,12 @@ In this release we are introducing Tigase Kernel Framework, which allows to conf
 
 What is DSL?
 ~~~~~~~~~~~~~
+
 DSL stands for domain-specific language - in this case language created for storage of configuration.
 
 Now we use domain based configuration which means that our configuration file is not a flat key=value storage but it defines objects, it's properties and assigned values.
 
-To illustrate it better let's start with a simple example. In properties file in order to configure PubSub component named `pubsub` you would use following properties:
+To illustrate it better let's start with a simple example. In properties file in order to configure PubSub component named '`pubsub`' you would use following properties:
 
 .. code::
 
