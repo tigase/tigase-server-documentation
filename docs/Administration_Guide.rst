@@ -2388,6 +2388,7 @@ When the user tries to setup the client for the first time he comes across 2 con
 
 2.6.1. DSL file format
 ^^^^^^^^^^^^^^^^^^^^^^^
+
 In previous Tigase XMPP Server releases configuration was stored in properties based configuration file. From Tigase XMPP Server 8.0.0 release it will be required to use new DSL based configuration file format. This file format was inspired by Groovy language syntax and new core feature of Tigase XMPP Server - Tigase Kernel Framework.
 
 why new format?
@@ -2529,6 +2530,7 @@ In properties based configuration file every property was defined as a string an
 as an object
    Using this format you set list as a list and integer is set as an integer.
 
+.. table::
 +-------------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
 | Type        | Description                                                                                                                                                                                                            |
 +=============+========================================================================================================================================================================================================================+
@@ -2580,7 +2582,7 @@ as an object
 
 as a plain string
    Very similar to properties based configuration, in fact values are passed in same format and later are converted to correct type by checking type expected by bean. *(Not recommended)*
-
+.. table::
 +-------------+-----------------------------------------------------------------------------------------------+
 | Type        | Description                                                                                   |
 +=============+===============================================================================================+
@@ -2613,7 +2615,7 @@ environment variable
 
 **Example of setting value of system property and environment variable to bean ``user``.**
 
-::
+.. code::
 
    user {
      name = env('USER')
@@ -2623,9 +2625,9 @@ environment variable
 
 ..
 
-      **Warning**
+   Warning::
 
-   For properties which accepts lists it is not allowed to set value using variable/property with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') ]``. It needs to be set in following way ``property = env('some-variable')``
+    For properties which accepts lists it is not allowed to set value using variable/property with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') ]``. It needs to be set in following way ``property = env('some-variable')``
  
 Computed values
 ''''''''''''''''
@@ -2642,7 +2644,7 @@ With DSL configuration format we introduce support for computable values for pro
 
 **Example of setting environment variable related path and computed timeout.**
 
-::
+.. code::
 
    bean {
      # setting path to `some-subdirectory` of user home directory
@@ -2656,11 +2658,10 @@ With DSL configuration format we introduce support for computable values for pro
 
 ..
 
-   **Warning**
+   Warning::
 
-   For properties which accepts lists it is not allowed to set value using computed values with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') + ',other-value' ]``. It needs to be set in following way ``property = env('some-variable') + ',other-value'``.
+    For properties which accepts lists it is not allowed to set value using computed values with comma separated values like ``value1,value2`` wrapped in ``[]``, ie. ``property = [ env('some-variable') + ',other-value' ]``. It needs to be set in following way ``property = env('some-variable') + ',other-value'``.
 
-.. _periodDurationValues:
 
 Period / Duration values
 '''''''''''''''''''''''''
