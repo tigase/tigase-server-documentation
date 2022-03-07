@@ -1272,7 +1272,7 @@ At the moment the most important is the etc/ directory with these files:
 
 
 Configure tigase.conf
-''''''''''''''''''''''
+'''''''''''''''''''''''
 
 Tigase.conf is a file that contains general program operating parameters, and java settings for Tigase to run. For now, the only setting we need to set is the **JAVA_HOME** directory.
 
@@ -2388,8 +2388,7 @@ When the user tries to setup the client for the first time he comes across 2 con
 
 2.6.1. DSL file format
 ^^^^^^^^^^^^^^^^^^^^^^^
-In previous Tigase XMPP Server releases configuration was stored in properties based configuration file.
-From Tigase XMPP Server 8.0.0 release it will be required to use new DSL based configuration file format. This file format was inspired by Groovy language syntax and new core feature of Tigase XMPP Server - Tigase Kernel Framework.
+In previous Tigase XMPP Server releases configuration was stored in properties based configuration file. From Tigase XMPP Server 8.0.0 release it will be required to use new DSL based configuration file format. This file format was inspired by Groovy language syntax and new core feature of Tigase XMPP Server - Tigase Kernel Framework.
 
 why new format?
 ~~~~~~~~~~~~~~~~~
@@ -2426,7 +2425,7 @@ DSL stands for domain-specific language - in this case language created for stor
 
 Now we use domain based configuration which means that our configuration file is not a flat key=value storage but it defines objects, it's properties and assigned values.
 
-To illustrate it better let's start with a simple example. In properties file in order to configure PubSub component named '`pubsub`' you would use following properties:
+To illustrate it better let's start with a simple example. In properties file in order to configure PubSub component named ``pubsub`` you would use following properties:
 
 .. code::
 
@@ -2444,28 +2443,19 @@ In DSL based configuration this would be replaced by following block
    }
 
 
-in which we define bean with name `pubsub` and set it's class inside `()` block to `tigase.pubsub.PubSubComponent`.
-We also use block between `{}` chars to define properties which are related to bean.
+in which we define bean with name `pubsub` and set it's class inside ``()`` block to ``tigase.pubsub.PubSubComponent``.
+We also use block between ``{}`` chars to define properties which are related to bean.
 Which means this properties will be passed only to this instance of Tigase PubSub Component, same as it was before where we needed to add prefix.
-Entries after `\#` are comments, to pass `#` you need to wrap whole part containing it in `''`, ie. `'test#242'`
+Entries after ``\#`` are comments, to pass ``#`` you need to wrap whole part containing it in ``''``, ie. ``'test#242'``
 
-WARNING: If a string value assigned to a property contains any char from a following list `=:,[]#+-*/` it needs to be wrapped in a `''`.
+WARNING: If a string value assigned to a property contains any char from a following list ``=:,[]#+-*/`` it needs to be wrapped in a ``''``.
 
 Why DSL?
 ~~~~~~~~
 
-DSL configuration format provides a number of advantages over the old system of configuration.
-. All configurations for components are related in a single block, so they are not spread out over several different lines.
-. No need for long property names, no longer have to invoke a long string of settings for multiple values.
-. Support is provided for environment variables.
-. No longer need to escape certain characters, making settings far more readable at a glance.
-. Values may be set using basic calculations, such as `100 * 200 * 2` rather than `40000`.
-. Parameter type values are no longer necessary, no more [i], [S], [B] etc..
-. Comma separated values can now be simplified lists with separate entries being able to be in multiple lines.
+DSL configuration format provides a number of advantages over the old system of configuration. All configurations for components are related in a single block, so they are not spread out over several different lines. No need for long property names, no longer have to invoke a long string of settings for multiple values. Support is provided for environment variables. No longer need to escape certain characters, making settings far more readable at a glance. Values may be set using basic calculations, such as ``100 * 200 * 2`` rather than ``40000``. Parameter type values are no longer necessary, no more [i], [S], [B] etc.. Comma separated values can now be simplified lists with separate entries being able to be in multiple lines.
 
-Although the format may seem more complex, looking like a section of java code, the formatting is consistent and can be far more readable.
-After some experience with DSL format, you'll find it's far more intuitive and user friendly than it may appear. Of course if there's any real confusion, Tigase can automatically convert old style properties files to the DSL format using the following command:
-[source,bash]
+Although the format may seem more complex, looking like a section of java code, the formatting is consistent and can be far more readable. After some experience with DSL format, you'll find it's far more intuitive and user friendly than it may appear. Of course if there's any real confusion, Tigase can automatically convert old style properties files to the DSL format using the following command:
 
 .. code-block:: bash
 
@@ -2476,7 +2466,7 @@ Setting property
 
 To set property you just write property name followed by `=` and value to set. This is always done in context of bean which configuration property you want to set.
 
-::
+.. code-block::
 
    test=true
 
@@ -2485,15 +2475,12 @@ This sets property which value is available to access by any bean.
 
 Setting global property
 ''''''''''''''''''''''''
-Like in properties file it is still possible to use property names starting with `--` without any context or any other properties at global scope.
-Format is the same as in case of setting property but they are defined without scope (in global scope).
-This properties are global and accessible by any bean but also set as system property in JVM.
+Like in properties file it is still possible to use property names starting with ``--`` without any context or any other properties at global scope. Format is the same as in case of setting property but they are defined without scope (in global scope). This properties are global and accessible by any bean but also set as system property in JVM.
 
 Defining bean
 ''''''''''''''
 
 You can configure bean by using following format:
-
 
 .. code:: bash
 
@@ -2501,30 +2488,30 @@ You can configure bean by using following format:
        # scope of bean properties
    }
 
-where `beanName` is name under which you want to configure bean.
-`beanName` must be wrapped in `''`, if `beanName` contains characters like `=:,[]#+-*/` and is recommended, if `beanName` is numeric only.
+where ``beanName`` is name under which you want to configure bean.
+`beanName` must be wrapped in ``''``, if ``beanName`` contains characters like ``=:,[]#+-*/`` and is recommended, if ``beanName`` is numeric only.
 
-Inside block between `(` and `)` you can define:
+Inside block between ``(` and `)`` you can define:
 
-* `class` which will be used as a bean, in example above we set class as `className`. *_(default: if you try to configure bean under name which has default class assigned with it in Tigase framework then this assigned class will be used. In other case you need to pass name of class to use as a bean)_*
-* `active` (boolean) whether you want the bean to be active or not (beans with `active` set to `false` are not loaded). *_(default: true)_*
-* `exportable` (boolean) defines if this bean should be exported and available for use for beans in inner scopes. This is advanced option in most cases it is recommended to omit this field in configuration. *_(default: false)_*
+* ``class`` which will be used as a bean, in example above we set class as ``className``. *_(default: if you try to configure bean under name which has default class assigned with it in Tigase framework then this assigned class will be used. In other case you need to pass name of class to use as a bean)_*
+* ``active`` (boolean) whether you want the bean to be active or not (beans with ``active`` set to ``false`` are not loaded). *_(default: true)_*
+* ``exportable`` (boolean) defines if this bean should be exported and available for use for beans in inner scopes. This is advanced option in most cases it is recommended to omit this field in configuration. *_(default: false)_*
 
-Spaces between `beanName` and block between `()` is optional as well as space between block `()` and block `{}`.
+Spaces between ``beanName`` and block between ``()`` is optional as well as space between block ``()`` and block ``{}``.
 It is recommended that properties of bean would be placed in separate lines with indentation and first property will be placed in new line.
 
 .. important::
 
-   Usage of `()` block is very important. When this block is used in configuration it automatically sets `active` property of bean definition for bean for which it is used to to `true`. This is done due to fact that default value of `active` is `true`.
+   Usage of ``()`` block is very important. When this block is used in configuration it automatically sets ``active`` property of bean definition for bean for which it is used to to `true`. This is done due to fact that default value of ``active` is ``true``.
 
-   If you omit it in configuration, you will set bean configuration but it may remain `inactive`. In this state bean will not be loaded and as a result will not be used by Tigase XMPP Server.
+   If you omit it in configuration, you will set bean configuration but it may remain ``inactive``. In this state bean will not be loaded and as a result will not be used by Tigase XMPP Server.
 
 
 Configuring bean
 '''''''''''''''''
 If you know that bean is defined and you do not want to change it's activity or class then you can just pass properties to configure bean in following way:
 
-::
+.. code::
 
    beanName {
        # scope of bean properties
@@ -2532,7 +2519,7 @@ If you know that bean is defined and you do not want to change it's activity or 
    }
 
 
-where `beanName` is name of bean to configure and `test` is name of property to set to `true` in this bean.
+where ``beanName`` is name of bean to configure and `test` is name of property to set to ``true`` in this bean.
 
 Format of values
 '''''''''''''''''
