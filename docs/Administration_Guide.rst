@@ -2303,7 +2303,6 @@ Upgrading database schemas is now possible using the ``upgrade-schema`` option. 
    ./scripts/tigase.sh upgrade-schema etc/tigase.conf
 
 
-
 .. Warning::
 
     Your database schema MUST be v8 or conversion will not occur properly!
@@ -4379,6 +4378,2500 @@ Using one certificate for multiple domains
 .. Note::
 
    Tigase tries to be *smart* and automatically detects wildcard domain and alternative domains so it’s not needed to duplicate same certificate in multiple files to match domains - same file will be loaded and make available for all domains (CNames) available in the certificate.
+
+Installing LetsEncrypt Certificates in Your Linux System
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+LetsEncrypt is a trusted CA that provides free security certificates. Unlike previously self-signed certificates, we can use LetsEncrypt Certificates to certify your domains from a trusted source.
+
+Please refer to official `certbot User Guide <https://certbot.eff.org/docs/using.html>`__ for details how to install and operate the tool, choosing desired method of domain authentication (DNS or webserver). After successful execution the certificate with all related files will be stored under ``/etc/letsencrypt/live/$domain``
+
+.. code:: bash
+
+   $ sudo ls  /etc/letsencrypt/live/$domain
+   cert.pem  chain.pem  fullchain.pem  privkey.pem  README
+
+In that directory, you will find four files:
+
+-  ``privkey.pem`` - private key for the certificate
+
+-  ``cert.pem`` - contains the server certificate by itself
+
+-  ``chain.pem`` - contains the additional intermediate certificate or certificates
+
+-  ``fullchain.pem`` - all certificates, including server certificate (aka leaf certificate or end-entity certificate). The server certificate is the first one in this file, followed by any intermediates.
+
+For Tigase XMPP Server, we are only concerned with ``privkey.pem`` and ``fullchain.pem`` (or ``chain.pem`` - please consider actual issuers and certification chain!).
+
+At this point we will need to obtain the root and intermediate certificates, this can be done by downloading these certificates from the `LetsEncrypt Chain of Trust website <https://letsencrypt.org/certificates/>`__.
+
+.. Note::
+
+   Please pay utmost attention to the actual certificate issuers and make sure that the certification chain is maintained!
+
+On the time of the writing, LetsEncrypt was providing domain certificates issued by ``R3`` CertificateAuthorigy (CA). In order to provide complete chain to the root CA you should get Let’s Encrypt R3 (``RSA 2048, O = Let’s Encrypt, CN = R3``) certificate. Depending on desired certification chain you have two options: 1) (default and recommended) using own LetsEncrypt CA: a) ``R3`` certificate signed by ISRG Root X1: https://letsencrypt.org/certs/lets-encrypt-r3.pem b) ``ISRG Root X1`` root certificate: https://letsencrypt.org/certs/isrgrootx1.pem 2) (legacy, option more compatible with old systems): cross-signed certificate by IdenTrust: a) ``R3`` certificate cross-signed by IdenTrust: https://letsencrypt.org/certs/lets-encrypt-r3-cross-signed.pem b) ``TrustID X3 Root`` from IdenTrust: https://letsencrypt.org/certs/trustid-x3-root.pem.txt
+
+Considering first (recommended) option, you may obtain them using wget:
+
+.. code:: bash
+
+   wget https://letsencrypt.org/certs/isrgrootx1.pem
+   wget https://letsencrypt.org/certs/lets-encrypt-r3.pem
+
+These are the root certificate, and the intermediate certificate signed by root certificate.
+
+.. Note::
+
+   IdenTrust cross-signed certificate will not function properly in the future!
+
+Take the contents of your ``privkey.pem``, certificate, and combine them with the contents of ``isrgrootx1.pem`` and ``lets-encrypt-r3.pem`` into a single pem certificate.
+
+Depending on your configuration you either need to name the file after your domain such as ``mydomain.com.pem`` and place it under ``certs/`` subdirectory of Tigase XMPP Server installation or update it using admin ad-hoc (see `??? <#certificateStorage>`__)
+
+If you moved all certs to a single directory, you may combine them using the following command under \*nix operating systems:.
+
+.. code:: bash
+
+   cat ./cert.pem ./privkey.pem ./lets-encrypt-r3.pem ./isrgrootx1.pem > mydomain.com.pem
+
+
+.. Note::
+
+   If you are using ``isrgrootx1`` root make sure you use ``cert.pem`` file instead of ``fullchain.pem``, which uses different intermediate certificate ( `Let’s Encrypt Authority X3 (IdenTrust cross-signed) <https://letsencrypt.org/certs/lets-encrypt-x3-cross-signed.pem.txt>`__ ) and you will have to use `DST Root CA X3 <https://letsencrypt.org/certs/trustid-x3-root.pem.txt>`__ certificate!
+
+Your certificate should look something like this:
+
+.. code:: certificate
+
+   -----BEGIN PRIVATE KEY-----
+   MIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQDAUAqqKu7Z4odo
+   ...
+   og89F9AbWr1mNmyRoScyqMXo
+   -----END PRIVATE KEY-----
+   -----BEGIN CERTIFICATE-----
+   cmNoIEdyb3VwMRUwEwYDVQQDEwxJU1JHIFJvb3QgWDEwHhcNMTUwNjA0MTEwNDM4
+   ...
+   TzELMAkGA1UEBhMCVVMxKTAnBgNVBAoTIEludGVybmV0IFNlY3VyaXR5IFJlc2Vh
+   -----END CERTIFICATE-----
+   -----BEGIN CERTIFICATE-----
+   FhpodHRwOi8vY3BzLmxldHNlbmNyeXB0Lm9yZzCBqwYIKwYBBQUHAgIwgZ4MgZtU
+   ...
+   bmcgUGFydGllcyBhbmQgb25seSBpbiBhY2NvcmRhbmNlIHdpdGggdGhlIENlcnRp
+   -----END CERTIFICATE-----
+
+
+.. Warning::
+
+    LetsEncrypt certificates expire 90 days from issue and need to be renewed in order for them to remain valid!
+
+You can check your certificate with utility class:
+
+::
+
+   java -cp <path_to_tigase-server_installation>/jars/tigase-utils.jar tigase.cert.CertificateUtil -lc mydomain.com.pem -simple
+
+
+Let’s encrypt and DNS verification
+'''''''''''''''''''''''''''''''''''
+
+The only way to obtain wildcard (``*.domain.com``) certificate is via DNS verification. Certbot support a number of DNS operators - you can check if your DNS provider is listed by executing ``$ certbot plugins``
+
+AWS Route53
+
+If you want to use it with Amazon Cloud you should install plugin for AWS:
+
+::
+
+   pip install certbot-dns-route53
+
+
+.. Note::
+
+   If you are using certbot under macOS and you installed it via brew then you should use: ``$( brew --prefix certbot )/libexec/bin/pip install certbot-dns-route53``
+
+You should store your credentials in ``~/.aws/credentials`` (you may want to create dedicated policy for updating DNS as described in `plugin’s documentation <https://certbot-dns-route53.readthedocs.io/en/stable/>`__:
+
+.. code:: bash
+
+   [default]
+   aws_access_key_id = <key_id>
+   aws_secret_access_key = <key>
+
+And afterward you should execute ``certbot`` with ``--dns-route53`` parameter
+
+Certbot update hook and Tigase API
+'''''''''''''''''''''''''''''''''''
+
+For greater automation it’s possible to automate updating certificate obtained with ``certbot`` in Tigase XMPP Server. You should use following deploy hook - either add it to ``/etc/letsencrypt/renewal-hooks/deploy/`` or use it directly in ``certboot`` commandline with ``--deploy-hook`` parameter (in the latter case, it will be added to particular domain configuration so it’s not necessary to specify UPDATE_DOMAINS).
+
+.. Note::
+
+   Please adjust account credentials used for deployment (``USER``, ``PASS``, ``DOMAIN``) as well as paths to Let’s Encrypt certificates (*ISRG Root X1* named ``isrgrootx1.pem`` and *Let’s Encrypt Authority X3* named ``letsencryptauthorityx3.pem``)
+
+.. code:: bash
+
+   #!/bin/bash
+
+   set -e
+
+   ## Configuration START
+
+   USER="admin_username"
+   PASS="admin_password"
+   DOMAIN="my_domain.tld"
+   HOST=${DOMAIN}
+   #UPDATE_DOMAINS=(${DOMAIN})
+   # PORT=":8080"
+   # APIKEY="?api-key=mySecretKey"
+   LE_CERTS_PATH="/path/to/letsencrypt/CA/certificates/"
+
+   ## Configuration END
+
+   fail_count=0
+
+   for domain in ${RENEWED_DOMAINS[@]}; do
+       if [[ $domain == "*."* ]]; then
+           CERT_DOMAIN=${domain#*\*.}
+       else
+           CERT_DOMAIN=${domain}
+       fi
+
+       if [[ ! -z "${UPDATE_DOMAINS}" ]] ; then
+           match=0
+           for dn in "${UPDATE_DOMAINS[@]}"; do
+               if [[ $dn = "$CERT_DOMAIN" ]]; then
+                   match=1
+                   break
+               fi
+           done
+           if [[ $match = 0 ]]; then
+               echo "Skipping updating ${domain} because it's not in the list of supported domains: ${UPDATE_DOMAINS[@]}"
+               continue
+           fi
+       fi
+
+       CERT=`cat "$RENEWED_LINEAGE/cert.pem" "$RENEWED_LINEAGE/privkey.pem" ${LE_CERTS_PATH}/isrgrootx1.pem ${LE_CERTS_PATH}/letsencryptauthorityx3.pem`
+
+       REQUEST="
+       <command>
+         <node>ssl-certificate-add</node>
+         <fields>
+           <item>
+             <var>Certificate in PEM format</var>
+             <value>${CERT}</value>
+           </item>
+           <item>
+             <var>command-marker</var>
+             <value>command-marker</value>
+           </item>
+           <item>
+             <var>VHost</var>
+             <value>${CERT_DOMAIN}</value>
+           </item>
+           <item>
+             <var>Save to disk</var>
+             <value>true</value>
+           </item>
+         </fields>
+       </command>"
+
+       response=`curl -s -L -H "Content-Type: text/xml" -X POST  http://${USER}%40${DOMAIN}:${PASS}@${HOST}${PORT}/rest/adhoc/vhost-man@${DOMAIN}${APIKEY} -d "${REQUEST}"`
+
+       if [[ ! ${response} = *"loaded successfully"* ]] ; then
+           echo -e "Server returned error while updating   ${domain}   certificate:\n ${response}"
+           fail_count=$((${fail_count}+1))
+       else
+           echo "Correctly updated ${domain} certificate"
+       fi
+   done
+
+   exit ${fail_count}
+
+.. Note::
+
+   If you are not using wildcard certificate when you have to provide certificate for main domain as well as certificates for subdomains that mach all components that you want to expose (muc, pubsub, push, etc…)
+
+Storing and managing certificates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Filesystem
+''''''''''
+
+By default Tigase loads and stores certificates in ``certs/`` subdirectory. Each *domain* certificate should be stored in a file which filename consists of domain name and ``.pem`` extension, i.e. ``<domain>.pem``. For example for domain tigase.net it would be ``certs/tigase.net.pem``.
+
+.. Note::
+
+   Tigase tries to be *smart* and automatically detects wildcard domain and alternative domains so it’s not needed to duplicate same certificate in multiple files to match domains.
+
+
+Database repository
+'''''''''''''''''''
+
+Alternatively it’s possible to use database as a storage for the certificates. Upon enabling it certificates won’t be read nor stored to the filesystem. You can enable it by adding ``repository () {}`` bean to ``'certificate-container' () {}`` in your TDSL configuration file:
+
+::
+
+   'certificate-container' () {
+       repository () {}
+   }
+
+If you are using database repository then you manage/update certificates using either ad-hoc command ``Add SSL certificate`` from *VHost Manager* or via HTTP REST API.
+
+2.7.5. Custom Authentication Connectors
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This article presents configuration options available to the administrator and describe how to set Tigase server up to use user accounts data from a different database.
+
+The first thing to know is that Tigase server always opens 2 separate connections to the database. One connection is used for user login data and the other is for all other user data like the user roster, vCard, private data storage, privacy lists and so on…​
+
+In this article we still assume that Tigase server keeps user data in it’s own database and only login data is retrieved from the external database.
+
+At the moment Tigase offers following authentication connectors:
+
+-  ``mysql``, ``pgsql``, ``derby`` - standard authentication connector used to load user login data from the main user database used by the Tigase server. In fact the same physical implementation is used for all JDBC databases.
+
+-  ``drupal`` - is the authentication connector used to integrate the Tigase server with `Drupal CMS <http://drupal.org/>`__.
+
+-  ``tigase-custom`` - is the authentication connector which can be used with any database. Unlike the 'tigase-auth' connector it allows you to define SQL queries in the configuration file. The advantage of this implementation is that you don’t have to touch your database. You can use either simple plain SQL queries or stored procedures. The configuration is more difficult as you have to enter carefully all SQL queries in the config file and changing the query usually involves restarting the server. For more details about this implementation and all configuration parameters please refer to `Tigase Custom Auth documentation <#custonAuthConnector>`__.
+
+-  ``tigase-auth`` (**DEPRECATED**) - is the authentication connector which can be used with any database. It executes stored procedures to perform all actions. Therefore it is a very convenient way to integrate the server with an external database if you don’t want to expose the database structure. You just have to provide a set of stored procedures in the database. While implementing all stored procedures expected by the server might be a bit of work it allows you to hide the database structure and change the SP implementation at any time. You can add more actions on user login/logout without restarting or touching the server. And the configuration on the server side is very simple. For detailed description of this implementation please refer to `Tigase Auth documentation <#tigaseAuthConnector>`__.
+
+As always the simplest way to configure the server is through the ``config.tdsl`` file. In the article describing this file you can find long list with all available options and all details how to handle it. For the authentication connector setup however we only need 2 options:
+
+.. code:: dsl
+
+   dataSource {
+       'default-auth' () {
+           uri = 'database connection url'
+       }
+   }
+   authRepository {
+       default () {
+           cls = 'connector'
+           'data-source' = 'default-auth'
+       }
+   }
+
+For example if you store authentication data in a ``drupal`` database on ``localhost`` your settings would be:
+
+.. code:: dsl
+
+   dataSource {
+       'default-auth' () {
+           uri = 'jdbc:mysql://localhost/drupal?user=user&password=passwd'
+       }
+   }
+   authRepository {
+       default () {
+           'data-source' = 'default-auth'
+       }
+   }
+
+You have to use a class name if you want to attach your own authentication connector.
+
+Default is:
+
+.. code:: dsl
+
+   authRepository {
+       default {
+           cls = 'tigase.db.jdbc.TigaseAuth'
+       }
+   }
+
+In the same exact way you can setup connector for any different database type.
+
+For example, drupal configuration is below
+
+.. code:: dsl
+
+   authRepository {
+       default {
+           cls = 'tigase.db.jdbc.DrupalWPAuth'
+       }
+   }
+
+Or tigase-custom authentication connector.
+
+.. code:: dsl
+
+   authRepository {
+       default {
+           cls = 'tigase.db.jdbc.TigaseCustomAuth'
+       }
+   }
+
+The different ``cls`` or classes are:
+
+-  Drupal - ``tigase.db.jdbc.DrupalWPAuth``
+
+-  MySQL, Derby, PostgreSQL, MS SQL Server - ``tigase.db.jdbc.JDBCRepository``
+
+You can normally skip configuring connectors for the default Tigase database format: ``mysql``, ``pgsql`` and ``derby``, ``sqlserver`` as they are applied automatically if the parameter is missing.
+
+One more important thing to know is that you will have to modify ``authRepository`` if you use a custom authentication connector. This is because if you retrieve user login data from the external database this external database is usually managed by an external system. User accounts are added without notifying Tigase server. Then, when the user logs in and tries to retrieve the user roster, the server can not find such a user in the roster database.
+
+.. Important::
+
+   To keep user accounts in sync between the authentication database and the main user database you have to add following option to the end of the database connection URL: ``autoCreateUser=true``.
+
+For example:
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://localhost/tigasedb?user=nobody&password=pass&autoCreateUser=true'
+       }
+   }
+
+If you are interested in even further customizing your authentication connector by writing your own queries or stored procedures, please have a look at the following guides:
+
+-  `Tigase Auth guide <#tigaseAuthConnector>`__
+
+-  `Tigase Custom Auth guide <#custonAuthConnector>`__
+
+Tigase Auth Connector (DEPRECATED)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.. Warning::
+    Tigase Auth connector is **DEPRECATED** as of version 8.0.0 and will be removed in future releases
+
+The Tigase Custom Auth connector with shortcut name: **tigase-custom** is implemented in the class: `tigase.db.jdbc.TigaseCustomAuth <https://github.com/tigase/tigase-server/tree/master/src/main/java/tigase/db/jdbc/TigaseCustomAuth.java>`__. It allows you to connect to any external database to perform user authentication and use a custom queries for all actions.
+
+You can find more details how to setup a custom connector in the Custom Authentication Connectors guide.
+
+The basic configuration is very simple:
+
+.. code:: bash
+
+   authRepository {
+       default () {
+           cls = 'tigase.db.jdbc.TigaseCustomAuth'
+           'data-source' = 'default-auth'
+       }
+   }
+
+That’s it.
+
+The connector loads correctly and starts working using predefined, default list of queries. In most cases you also might want to define your own queries in the configuration file. The shortest possible description is the following example of the content from the ``config.tdsl`` file:
+
+This query is used to check connection to the database, whether it is still alive or not
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'conn-valid-query' = 'select 1'
+       }
+   }
+
+This is database initialization query, normally we do not use it, especially in clustered environment
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'init-db-query' = 'update tig_users set online_status = 0'
+       }
+   }
+
+.. Note::
+
+   ``online_status`` column does not exist and would need to be added for that query to work.
+
+Below query performs user authentication on the database level. The Tigase server does not need to know authentication algorithm or password encoding type, it simply passes user id (BareJID) and password in form which was received from the client, to the stored procedure. If the authentication was successful the procedure returns user bare JID or null otherwise. Tigase checks whether the JID returned from the query matches JID passed as a parameter. If they match, the authentication is successful.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'user-login-query' = '{ call TigUserLoginPlainPw(?, ?) }'
+       }
+   }
+
+
+.. Note::
+
+   ``TigUserLoginPlainPw`` is no longer part of a Tigase XMPP Server database schema and would need to be created.
+
+Below query returns number of user accounts in the database, this is mainly used for the server metrics and monitoring components.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+         'users-count-query' = '{ call TigAllUsersCount() }'
+       }
+   }
+
+The Below query is used to add a new user account to the database.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'add-user-query' = '{call TigAddUserPlainPw(?, ?) }'
+       }
+   }
+
+Below query is used to remove existing account with all user’s data from the database.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'del-user-query' = '{ call TigRemoveUser(?) }'
+       }
+   }
+
+This query is used for the user authentication if ``user-login-query`` is not defined, that is if there is no database level user authentication algorithm available. In such a case the Tigase server loads user’s password from the database and compares it with data received from the client.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'get-password-query' = 'select user_pw from tig_users where user_id = ?'
+       }
+   }
+
+Below query is used for user password update in case user decides to change his password.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'update-password-query' = 'update tig_users set user_pw = ? where user_id = ?'
+       }
+   }
+
+This query is called on user logout event. Usually we use a stored procedure which records user logout time and marks user as offline in the database.
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'update-logout-query' = 'update tig_users, set online_status = online_status - 1 where user_id = ?'
+       }
+   }
+
+
+.. Note::
+
+   ``online_status`` column does not exist and would need to be added for that query to work.
+
+This configuration specifies what non-sasl authentication mechanisms to expose to the client
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'non-sasl-mechs' = [ 'password', 'digest' ]
+       }
+   }
+
+This setting to specify what sasl authentication mechanisms expose to the client
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'sasl-mechs' = 'PLAIN,DIGEST-MD5'
+       }
+   }
+
+Queries are defined in the configuration file and they can be either plain SQL queries or stored procedures. If the query starts with characters: ``{ call`` then the server assumes this is a stored procedure call, otherwise it is executed as a plain SQL query. Each configuration value is stripped from white characters on both ends before processing.
+
+Please don’t use semicolon ``;`` at the end of the query as many JDBC drivers get confused and the query may not work.
+
+Some queries can take arguments. Arguments are marked by question marks ``?`` in the query. Refer to the configuration parameters description for more details about what parameters are expected in each query.
+
+This example shows how to use a stored procedure to add a user as a query with 2 required parameters (username, and password).
+
+.. code:: dsl
+
+   authRepository {
+       default () {
+           'add-user-query' = '{call TigAddUserPlainPw(?, ?) }'
+       }
+   }
+
+The same query with plain SQL parameters instead:
+
+.. code:: dsl
+
+   'add-user-query' = 'insert into users (user_id, password) values (?, ?)'
+
+The order of the query arguments is important and must be exactly as described in specification for each parameter.
+
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| Query Name                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Arguments                                        | Example Query                                                                 |
++===========================+===========================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================================+==================================================+===============================================================================+
+| ``conn-valid-query``      | Query executed periodically to ensure active connection with the database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Takes no arguments.                              | ``select 1``                                                                  |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``init-db-query``         | Database initialization query which is run after the server is started.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Takes no arguments.                              | ``update tig_users set online_status = 0``                                    |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``add-user-query``        | Query adding a new user to the database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Takes 2 arguments: ``(user_id (JID), password)`` | ``insert into tig_users (user_id, user_pw) values (?, ?)``                    |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``del-user-query``        | Removes a user from the database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Takes 1 argument: ``(user_id (JID))``            | ``delete from tig_users where user_id = ?``                                   |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``get-password-query``    | Retrieves user password from the database for given user_id (JID).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Takes 1 argument: ``(user_id (JID))``            | ``select user_pw from tig_users where user_id = ?``                           |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``update-password-query`` | Updates (changes) password for a given user_id (JID).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Takes 2 arguments: ``(password, user_id (JID))`` | ``update tig_users set user_pw = ? where user_id = ?``                        |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``user-login-query``      | Performs user login. Normally used when there is a special SP used for this purpose. This is an alternative way to a method requiring retrieving user password. Therefore at least one of those queries must be defined: ``user-login-query`` or ``get-password-query``. If both queries are defined then ``user-login-query`` is used. Normally this method should be only used with plain text password authentication or sasl-plain. Tigase expects a result set with user_id to be returned from the query if login is successful and empty results set if the login is unsuccessful. | Takes 2 arguments: ``(user_id (JID), password)`` | ``select user_id from tig_users where (user_id = ?) AND (user_pw = ?)``       |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``user-logout-query``     | This query is called when user logs out or disconnects. It can record that event in the database.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Takes 1 argument: ``(user_id (JID))``            | ``update tig_users, set online_status = online_status - 1 where user_id = ?`` |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``non-sasl-mechs``        | Comma separated list of NON-SASL authentication mechanisms. Possible mechanisms are: ``password`` and ``digest``. The digest mechanism can work only with ``get-password-query`` active and only when password are stored in plain text format in the database.                                                                                                                                                                                                                                                                                                                           |                                                  |                                                                               |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+| ``sasl-mechs``            | Comma separated list of SASL authentication mechanisms. Possible mechanisms are all mechanisms supported by Java implementation. The most common are: ``PLAIN``, ``DIGEST-MD5``, ``CRAM-MD5``. "Non-PLAIN" mechanisms will work only with the ``get-password-query`` active and only when passwords are stored in plain text format in the database.                                                                                                                                                                                                                                      |                                                  |                                                                               |
++---------------------------+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+--------------------------------------------------+-------------------------------------------------------------------------------+
+
+Drupal Authentication
+~~~~~~~~~~~~~~~~~~~~~~
+
+Currently, we can only check authentication against a **Drupal** database at the moment. Full **Drupal** authentication is not implemented as of yet.
+
+As **Drupal** keeps encrypted passwords in database the only possible authorization protocols are those based on PLAIN passwords.
+
+To protect your passwords **Tigase** server must be used with SSL or TLS encryption.
+
+Implementation of a **Drupal** database based authorization is located in ``tigase.db.jdbc.DrupalAuth`` class. Although this class is capable of adding new users to the repository I recommend to switch in-band registration off due to the caching problems in **Drupal.** Changes in database are not synchronized with **Drupal** yet. Functionality for adding new users is implemented only to ease user accounts migration from different repository types from earlier **Tigase** server installations.
+
+The purpose of that implementation was to allow all accounts administration tasks from **Drupal** like: account creation, all accounts settings, like e-mail, full name, password changes and so on.
+
+**Tigase** server uses following fields from **Drupal** database: name (user account name), pass (user account password), status (status of the account). Server picks up all changes instantly. If user status is not 1 then server won’t allow user to login trough XMPP even if user provides valid password.
+
+There is no *Roster* management in **Drupal** yet. So Roster management have to be done from the XMPP client.
+
+LDAP Authentication Connector
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tigase XMPP Server offers support for authenticating users against an LDAP server in **Bind** **Authentication** mode.
+
+Configuration for the LDAP support is really simple you just have to add a few lines to your ``config.tdsl`` file.
+
+.. code:: tdsl
+
+   authRepository {
+       default () {
+           cls = 'tigase.db.ldap.LdapAuthProvider'
+           uri = 'ldap://ldap.tigase.com:389'
+           'user-dn-pattern' = 'cn=USER_ID,ou=people,dc=tigase,dc=org'
+       }
+   }
+
+Please note the ``USER_ID`` element, this is a special element of the configuration which is used to authenticate particular user. Tigase LDAP connector replaces it with appropriate data during authentication. You can control what Tigase should put into this part. In your configuration you must replace this string with one of the following:
+
+1. ``%1$s`` - use user name only for authentication (JabberID’s localpart)
+
+2. ``%2$s`` - use domain name only for authentication (JabberID’s domain part)
+
+3. ``%3$s`` - use the whole Jabber ID (JID) for authentication
+
+.. Important::
+
+   Please make sure that you included ``autoCreateUser=true`` in your main data source (UserRepository and **not** above AuthRepository) as outlined in `??? <#autoCreateUser>`__ - otherwise you may run into problems with data access.
+
+Configuration of SASL EXTERNAL
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In order to enable SASL External set "Client Certificate CA" (``client-trust-extension-ca-cert-path``) to the path containing Certification Authority (CA) certificate in the VHost (domain) configuration, for example ``/path/to/cacert.pem``
+
+File ``cacert.pem`` contains Certificate Authority certificate which is used to sign clients certificate.
+
+Client certificate must include user’s Jabber ID as ``XmppAddr`` in ``subjectAltName``:
+
+   As specified in RFC 3920 and updated in RFC 6120, during the stream negotiation process an XMPP client can present a certificate (a “client certificate”). If a JabberID is included in a client certificate, it is encapsulated as an id-on-xmppAddr Object Identifier (“xmppAddr”), i.e., a subjectAltName entry of type otherName with an ASN.1 Object Identifier of “id-on-xmppAddr” as specified in Section 13.7.1.4 of RFC 6120, `XEP-0178 <http://xmpp.org/extensions/xep-0178.html#c2s>`__.
+
+It is possible to make client certificate **required** using same VHost configuration and enabling option ``Client Certificate Required`` (``client-trust-extension-cert-required``).
+
+If this option will be enabled, then client **must provide** certificate. This certificate will be verified against ``clientCertCA``. If client does not provide certificate or certificate will be invalid, **TLS handshake will be interrupted and client will be disconnected**.
+
+Using this options does not force client to use SASL EXTERNAL. Client still may authenticate with other SASL mechanisms.
+
+2.7.6. SASL Mechanisms
+^^^^^^^^^^^^^^^^^^^^^^^
+
+XMPP protocol supports many authentication methods, but most of them are used as `SASL <https://tools.ietf.org/html/rfc4422>`__ mechanisms. Tigase XMPP Server provides many SASL-based authentication mechanisms such as:
+
+-  PLAIN *(enabled)*
+
+-  ANONYMOUS
+
+-  EXTERNAL
+
+-  SCRAM-SHA-1 *(enabled)*
+
+-  SCRAM-SHA-256 *(enabled)*
+
+-  SCRAM-SHA-512
+
+Most of them are enabled by default on default Tigase XMPP Server installation.
+
+Enabling and disabling SASL mechanisms (credentials encoder/decoder)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you want to enable or disable one of password-based authentication mechanism such as ``SCRAM-SHA-1``, ``SCRAM-SHA-256`` or ``SCRAM-SHA-512`` you can do that by enabling or disabling encoders and decoders used on your installation. By enabling encoders/decoders you are deciding in what form the password is stored in the database. Those changes may (and in most cases will) impact which SASL mechanisms may be allowed to use on your installation.
+
+.. Note::
+
+   In most cases you should enable or disable both (credentials encoder and decoder) of the same type at the same time. The only exception of this rule is when you are changing those on already working installation. In this case you should only enable encoder of the type which you want to enable and request users to change their passwords. Then, after users will change their passwords, you should reconfigure server to enable decoder of the particular type. *(in other case user may loose a way to log in to your installation as system will reject their credentials as it may not have matching credentials for particular SASL mechanism)*.
+
+**Enabling SCRAM-SHA-512 encoder**
+'''''''''''''''''''''''''''''''''''
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialEncoders () {
+               'SCRAM-SHA-512' () {}
+           }
+       }
+   }
+
+**Disabling SCRAM-SHA-1 decoder**
+'''''''''''''''''''''''''''''''''''
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialDecoders () {
+               'SCRAM-SHA-1' (active: false) {}
+           }
+       }
+   }
+
+
+.. Warning::
+
+    It is strongly recommended not to disable encoders if you have enabled decoder of the same type as it may lead to the authentication issues, if client tries to use a mechanism which that is not available.
+
+2.7.7. Application passwords
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+In recent versions of Tigase XMPP Server it is possible to create and use multiple username and password pairs to authorize connection to the single XMPP account.
+
+With that in place it is now possible to have multiple password for a multiple clients accessing the same account what can be used to increase security of the account as even if one password compromised you can still log in and block lost or compromised device.
+
+Adding application password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To add new username-password pair you need to execute ``Add user credentials`` ad-hoc command (command node ``auth-credentials-add`` at ``sess-man``) while logged in the XMPP account for which you want to add a new application password.
+
+During execution for a command you will be provided with a form to fill in with following fields:
+
+-  The Jabber ID for the account (``jid``) - bare JID of your account
+
+-  Credential ID (``credentialId``) - username for the new application password
+
+-  Password (``password``) - a new password
+
+After submitting this form a new credential will be added.
+
+Login in with application password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To log in with new password the XMPP client can use any SASL mechanism but it needs to provide (in SASL message):
+
+-  ``authzid`` - account JID
+
+-  ``authcid`` - username for application password
+
+-  ``passwd`` - application password
+
+With proper values, you application will be able to log in using application password.
+
+Removing application password
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If your device is compromised or lost and you want to remove application password, you need to use a different device and log in on your XMPP account. Then you need to execute ``Delete user credentials`` ad-hoc command (command node ``auth-credentials-delete`` at ``sess-man``).
+
+During execution for a command you will be provided with a form to fill in with following fields:
+
+-  The Jabber ID for the account (``jid``) - bare JID of your account
+
+-  Credential ID (``credentialId``) - username for the application password which you want to remove
+
+After submitting this form a credential will be removed.
+
+2.7.8. Packet Filtering
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase offers different ways to filter XMPP packets flying through the server. The most common use for packet filtering is to restrict users from sending or receiving packets based on the sender or received address.
+
+There are also different possible scenarios: time based filtering, content filtering, volume filtering and so on.
+
+All pages in this section describe different filtering strategies.
+
+Domain Based Packet Filtering
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Domain based packet filtering is a simple filter allowing to restrict user communication based on the source/destination domain name. This is especially useful if we want to limit user communication within a single - own domain only or a list of domains.
+
+A company might not wish to allow employers to chat during work hours with anybody in the world. A company may also have a few different domains used by different branches or departments. An administrator may restrict communication to a list of domains.
+
+Introduction
+'''''''''''''
+
+The restriction is on a per-user basis. So the administrator can set a different filtering rules for each user. There is also a per-domain configuration and global-installation setting (applied from most general to most specific, i.e. from installation to user).
+
+Regular users can not change the settings. So this is not like a privacy list where the user control the filter. Domain filter can not be changed or controlled by the user. The system administrator can change the settings based on the company policy.
+
+There are predefined rules for packet filtering:
+
+1. ``ALL`` - user can send and receive packets from anybody.
+
+2. ``LOCAL`` - user can send and receive packets within the server installation only and all it’s virtual domains.
+
+3. ``OWN`` - user can send and receive packets within his own domains only
+
+4. ``BLOCK`` - user can’t communicate with anyone. This could be used as a means to temporarily disable account or domain.
+
+5. ``LIST`` - user can send and receive packets within listed domains only (i.e. *whitelist*).
+
+6. ``BLACKLIST`` - user can communicate with everybody (like ``ALL``), except contacts on listed domains.
+
+7. ``CUSTOM`` - user can communicate only within custom created rules set.
+
+Whitelist (``LIST``) and blacklist (``BLACKLIST``) settings are mutually exclusive, i.e. at any given point of time only one of them can be used.
+
+Those rules applicable to particular users are stored in the user repository and are loaded for each user session. If there are no rules stored for a particular user server tries to apply rules for a VHost of particular user, and if there is no VHost filtering policy server uses global server configuration. If there is no filtering policy altogether server applies defaults based on following criteria:
+
+1. If this is **Anonymous** user then ``LOCAL`` rule is applied
+
+2. For all **other** users ``ALL`` rule is applied.
+
+Configuration
+''''''''''''''
+
+Filtering is performed by the domain filter plugin which must be loaded at startup time. It is loaded by default if the plugins list is not set in the configuration file. However if you have a list of loaded plugins in the configuration file make sure ``domain-filter`` is on the list.
+
+There is no other configuration required for the plugin to work.
+
+Administration, Rules Management
+''''''''''''''''''''''''''''''''''
+
+Although controlling domain filtering rules is possible for each user separately, it is not practical for large installations. In most cases users are stored in the database and a third-party system keeps all the user information.
+
+To change the rule for a single user you can use loadable administration scripts feature and load `UserDomainFilter.groovy <https://github.com/tigase/tigase-server/tree/master/src/main/groovy/tigase/admin/UserDomainFilter.groovy>`__ script. It enables modifying rules for a given user JID.
+
+Implementation
+'''''''''''''''
+
+If you have a third party system which keeps and manages all user information than you probably have your own UserRepository implementation which allows the Tigase server to access user data. Filtering rules are loaded from user repository using following command:
+
+.. code:: java
+
+   repo.getData(user_id, null, DomainFilter.ALLOWED_DOMAINS_KEY, null);
+   repo.getData(user_id, null, DomainFilter.ALLOWED_DOMAINS_LIST_KEY, null);
+
+Where ``user_id`` is user Jabber ID without resource part, ``DomainFilter.ALLOWED_DOMAINS_KEY`` is a property key: ``allowed-domains``. The user repository MUST return one of following only:
+
+1. ``ALL`` - if the user is allowed to communicate with anybody
+
+2. ``LOCAL`` - if the user is allowed to communicate with users on the same server installation.
+
+3. ``OWN`` - if the user is allowed to communicate with users within his own domain only.
+
+4. ``LIST`` - list of domains within which the user is allowed to communicate with other users. No wild-cards are supported. User’s own domain should be included too.
+
+5. ``BLACKLIST`` - list of domains within which the user is NOT allowed to communicate with other users. No wild-cards are supported. User’s own domain should NOT be included.
+
+6. ``CUSTOM`` - list of rules defining custom communication permissions (server processes stanza according to first matched rule, similar to XEP-0016) in the following format:
+
+::
+
+   ruleSet = rule1;rule2;ruleX;
+
+   rule = order_number|policy|UID_type[|UID]
+
+   order_number = any integer;
+   policy = (allow|deny);
+   UID_type = [jid|domain|all];
+   UID = user JID or domain, for example pubsub@test.com; if UID_type is ALL then this is ignored.
+
+For example:
+
+::
+
+   1|allow|self;
+   2|allow|jid|admin@test2.com;
+   3|allow|jid|pubsub@test.com;
+   4|deny|all;
+
+1. ``null`` - a java null if there are no settings for the user.
+
+In case of ``LIST`` and ``BLACKLIST`` filtering options, it’s essential to provide list of domains for the whitelisting/blacklisting. ``DomainFilter.ALLOWED_DOMAINS_LIST_KEY`` is a property key: "allowed-domains-list". The user repository MUST return semicolon separated list of domains: ``domain1.com;domain2.com,domain3.org``
+
+The filtering is performed by the ```tigase.xmpp.impl.DomainFilter`` <https://github.com/tigase/tigase-server/tree/master/src/main/java/tigase/xmpp/impl/DomainFilter.java>`__ plugin. Please refer to source code for more implementation details.
+
+2.7.9. Access Control Lists in Tigase
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase offers support for **Access Control List (ACL)** to allow for fine grained access to administration commands on the server.
+
+By default, all administration commands are only accessible (visible through service discovery and can be executed) by the service administrators. Service administrators are existing accounts with JIDs (**BareJIDs**) listed in the ``config.tdsl`` file under ``admins = []`` (please see `??? <#admins>`__ for details).
+
+Additionally, other XMPP users and entities can be assigned permissions to execute a command or commands using Tigase’s ACL capabilities.
+
+The following is a list of possible ACL modifiers for administrator command accessibility:
+
+-  ``ALL`` - Everybody can execute the command, even users from different federated servers.
+
+-  ``ADMIN`` - Local server administrators can execute the command, this is a default setting if no ACL is set for a command.
+
+-  ``LOCAL`` - All users with accounts on the local server can execute the command. Users from other, federated servers will not be able to execute the command.
+
+-  ``NONE`` - No one will be allowed to execute this command
+
+-  ``DOMAIN_OWNER`` - Only user which is owner of the domain which items are being manipulated is allowed to execute the comment. If script is not checking permissions for the manipulated item, this value will behave in the same way as ``LOCAL``.
+
+-  ``DOMAIN_ADMIN`` - Only user which is one of the domain administrators will be able to execute the command manipulating items related to the domain. If script is not checking permissions for the manipulated item, this value will behave in the same way as ``LOCAL``.
+
+-  ``example.com`` - Only users with accounts on the selected domain will be able to execute the command. It may be useful to setup a domain specifically for admin accounts, and automatically all users within that domain would be able to run the command.
+
+-  ``user@example.com`` - Comma separated list of JIDs of users who can execute the command.
+
+In any case, regardless of ACL settings, any command can be executed and accessed by the designated service wide administrators, that is accounts listed as admins in the ``config.tdsl`` file.
+
+Multiple ACL modifiers can be combined and applied for any command. This may not always makes sense. For example ALL supersedes all other settings, so it does not make sense to combine it with any other modifier. However, most others can be combined with JID to broaden access to specific accounts.
+
+On Tigase server the Access Control List is checked for the first matching modifier. Therefore if you combine ALL with any other modifier, anybody from a local or remote service will always be able to execute the command, no matter what other modifiers are added.
+
+Please note, the ACL lists work on the command framework level. Access is verified before the command is actually executed. There might be additional access restrictions within a command itself. In many cases, even if all local users are permitted to execute a command (LOCAL modifier), some commands allow only to be executed by a domain owner or a domain administrator (and of course by the service-wide administrators as well). All the commands related to a user management such as adding a new user, removing a user, password changes, etc… belong to this category. When conducting domain (vhost) management, creation/registration of a new domain can be done by any local user (if LOCAL ACL modifier is set) but then all subsequent domain management tasks such as removing the vhost, updating its configuration, setting SSL certificate can be done by the domain owner or administrator only.
+
+The ACL list is set for a specific Tigase component and a specific command. Therefore the configuration property must specify all the details. So the general format for configuring ACL for a command is this:
+
+.. code:: dsl
+
+   comp-id () {
+       commands {
+           'command-id' = [ 'ACL_modifier', 'ACL_modifier', 'ACL_modifier' ]
+       }
+   }
+
+The breakdown is as such:
+
+-  ``comp-id`` is the Tigase server component ID such as: sess-man, vhost-man, c2s, etc..
+
+-  ``commands`` is a static text which indicates that the property is for component’s command settings.
+
+-  ``command-id`` is a command ID for which we set the ACL such as query-dns, http://jabber.org/protocol/admin#add-user, user-roster-management, etc…
+
+Here are a few examples:
+
+*Allowing local users to create and manage their own domains*
+
+.. code:: dsl
+
+   'vhost-man' () {
+       commands {
+           'comp-repo-item-add' = 'LOCAL'
+           'comp-repo-item-remove' = 'LOCAL'
+           'comp-repo-item-update' = 'LOCAL'
+           'ssl-certificate-add' = 'LOCAL'
+       }
+   }
+
+In fact all the commands except item-add can be executed by the domain owner or administrator.
+
+*Allowing local users to execute user management commands:*
+
+.. code:: dsl
+
+   'sess-man' () {
+       'commands' {
+           'http://jabber.org/protocol/admin#add-user' = 'LOCAL'
+           'http://jabber.org/protocol/admin#change-user-password' = 'LOCAL'
+           'http://jabber.org/protocol/admin#delete-user' = 'LOCAL'
+           'http://jabber.org/protocol/admin#get-online-users-list' = 'LOCAL'
+           'http://jabber.org/protocol/admin#get-registered-user-list' = 'LOCAL'
+           'http://jabber.org/protocol/admin#user-stats' = 'LOCAL'
+           'http://jabber.org/protocol/admin#get-online-users-list' = 'LOCAL'
+       }
+   }
+
+As in the previous example, the commands will by executed only by local users who are the specific domain administrators.
+
+*Allowing users from a specific domain to execute query-dns command and some other users for given JIDs from other domains:*
+
+.. code:: dsl
+
+   'vhost-man' () {
+       'commands' {
+           'query-dns' = [ 'tigase.com', 'admin@tigase.org', 'frank@example.com' ]
+       }
+   }
+
+To be able to set a correct ACL property you need to know component names and command IDs. Component IDs can be found in the service discovery information on running server or in the server logs during startup. A command ID can be found in the command script source code. Each script contains a list of metadata at the very beginning of it’s code. One of them is ``AS:CommandId`` which is what you have to use for the ACL setting.
+
+2.7.10. TLS/SSL encryption features configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Tigase allows adjusting the most important parameters used when establishing TLS connections - set of protocols and ciphers that will be used during negotiation of the connection. The single most important is ``hardened-mode`` - it’s the most general configuration and offers three-step adjustment of the settings - please see `??? <#hardenedMode>`__ for details. ``hardened-mode`` can be configured both via TDSL configuration file (either on ``root`` level or for ``sslContextContainer`` for particular connection managers) or on VHost level.
+
+If you want to disable certain protocols or ciphers you can use two options: ``tls-disabled-protocols`` and ``tls-disabled-ciphers`` respectively. They allow, as name suggests, disabling certain items from default sets. They both takes an array of strings, which ten be removed from the lists.
+
+Let’s say you’d like to remove support for ``SSL``, ``SSLv2`` and ``SSLv3`` protocols. You should simply use following configuraiton: ``'tls-disabled-protocols' = ['SSL', 'SSLv2', 'SSLv3']``. Complete list of protocols depends on particular Java version that you use - please refer to the documentation for details. For example for the default Java11 list you can check `SSLContext Algorithms <https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#sslcontext-algorithms>`__
+
+``tls-disabled-ciphers`` follows same format and uses names defined in `JSSE Cipher Suite Names <https://docs.oracle.com/en/java/javase/11/docs/specs/security/standard-names.html#jsse-cipher-suite-names>`__. It’s also possible to use regular expressions to quickly eliminate groups of ciphers.
+
+If you want to enable only specific protocols or ciphers irrespective of ``hardened-mode`` or above disabling options you can use ``tls-enabled-protocols`` and ``tls-enabled-ciphers`` - those two options take arrays as well and they will configure Tigase to use only those protocols or ciphers that are provided (without support for regular expressions). Therefore if you configure Tigase with ``'tls-enabled-protocols' = [ 'TLSv1.2' ]`` then **only** ``TLSv1.2`` will be supported by Tigase.
+
+The last option that you may be interested in adjusting is ``ephemeral-key-size`` - it follows Java’s configuration capabilities outlined in `Customizing Size of Ephemeral Diffie-Hellman Keys <https://docs.oracle.com/en/java/javase/11/security/java-secure-socket-extension-jsse-reference-guide.html#GUID-D9B216E8-3EFC-4882-B76E-17A87D8F2F9D>`__. Tigase defaults Diffie-Hellman keys of 4096 bits.
+
+.. Important::
+
+   We try to provide the best default set of options therefore **it’s recommendable to use defaults provided by Tigase**. If you want to make your extremely secure (considering possible connectivity issues with installations that may be less secure) then you should only adjust ``hardened-mode`` setting (and switch it to ``strict``).
+
+Testing hosts TLS capabilities
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If you run into issues with TLS connectivity it’s helpful to compare if both installations support same set of protocols and ciphers. One of the most versatile and helpful tools is `Mozilla’s CipherScan <https://github.com/mozilla/cipherscan>`__. For example for our installation ``tigase.im`` result would look like this:
+
+::
+
+   $ ./cipherscan --curves -starttls xmpp -servername tigase.im tigase.me:5222
+   .......................................................................
+   Target: tigase.me:5222
+
+   prio  ciphersuite                  protocols              pfs                 curves
+   1     ECDHE-RSA-AES256-GCM-SHA384  TLSv1.2                ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1,secp384r1,secp521r1
+   2     ECDHE-RSA-AES256-SHA384      TLSv1.2                ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1,secp384r1,secp521r1
+   3     ECDHE-RSA-AES256-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1,secp384r1,secp521r1
+   4     DHE-RSA-AES256-GCM-SHA384    TLSv1.2                DH,4096bits         None
+   5     DHE-RSA-AES256-SHA256        TLSv1.2                DH,4096bits         None
+   6     DHE-RSA-AES256-SHA           TLSv1,TLSv1.1,TLSv1.2  DH,4096bits         None
+   7     ECDHE-RSA-AES128-GCM-SHA256  TLSv1.2                ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1
+   8     ECDHE-RSA-AES128-SHA256      TLSv1.2                ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1,secp384r1,secp521r1
+   9     ECDHE-RSA-AES128-SHA         TLSv1,TLSv1.1,TLSv1.2  ECDH,B-571,570bits  sect283k1,sect283r1,sect409k1,sect409r1,sect571k1,sect571r1,secp256k1,prime256v1,secp384r1,secp521r1
+   10    DHE-RSA-AES128-GCM-SHA256    TLSv1.2                DH,4096bits         None
+   11    DHE-RSA-AES128-SHA256        TLSv1.2                DH,4096bits         None
+   12    DHE-RSA-AES128-SHA           TLSv1,TLSv1.1,TLSv1.2  DH,4096bits         None
+
+   Certificate: trusted, 2048 bits, sha256WithRSAEncryption signature
+   TLS ticket lifetime hint: None
+   NPN protocols: None
+   OCSP stapling: not supported
+   Cipher ordering: client
+   Curves ordering: client - fallback: no
+   Server supports secure renegotiation
+   Server supported compression methods: NONE
+   TLS Tolerance: yes
+
+TLS 1.3 compatibility
+~~~~~~~~~~~~~~~~~~~~~~
+
+Due to compatibility issues, TLS 1.3 is currently (version 8.1.x) disabled by default. It can be enabled by setting property ``tls-disable-tls13`` of ``sslContextContainer`` bean to ``false``:
+
+::
+
+   sslContextContainer () {
+       'tls-disable-tls13' = false
+   }
+
+2.8. Database Management
+------------------------
+
+Tigase is coded to perform with multiple database types and numbers. Owing to it’s versatile nature, there are some tools and procedures that may be of use to certain administrators.
+
+2.8.1. Recommended database versions
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+As of v8.0.0 here are the minimum and recommended versions of databases for use with Tigase:
+
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| Database   | Recommended Version | Minimum Version | Additional Information                                                                                                             |
++============+=====================+=================+====================================================================================================================================+
+| DerbyDB    | 10.12.1.1           | 10.12.1.1       | Included with Tigase XMPP Server                                                                                                   |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| MySQL      | 5.7                 | 5.6.4           | Required to properly support timestamp storage with millisecond precision                                                          |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| SQLServer  | 2014                | 2012            | 2012 needed so we can count use fetch-offset pagination feature.                                                                   |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| PostgreSQL | 13.0                | 9.4             | New UA schema requires at least 9.4; if using version older than 13 manual installation of ``uuid-ossp`` extension is required (1) |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| MongoDB    | 3.2                 | 3.0             |                                                                                                                                    |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+| MariaDB    | ?                   | 10.0.12         | Basic features works with 10.0.12-MariaDB Homebrew, but is not fully tested.                                                       |
++------------+---------------------+-----------------+------------------------------------------------------------------------------------------------------------------------------------+
+
+.. Note::
+
+   (1) For PostgreSQL version older than 13.0 manual installation of ``uuid-ossp`` by the superuser to the *created database* is required:
+
+   .. code:: postgresql
+
+      CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+Although Tigase may support other versions of databases, these are the ones we are most familiar with in offering support and advice. Use of databases outside these guidelines may result in unforeseen errors.
+
+2.8.2. Database Watchdog
+^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to have Tigase test availability and existence of database periodically only when db connections are idle. By default this ping is sent once every 60 minutes to each connected repository. However this can be overridden as a part of the dataSource property:
+
+.. code:: properties
+
+   dataSource {
+       default () {
+           uri = '....'
+       }
+       'test' () {
+           uri =  '...'
+           'watchdog-frequency' = 'PT30M'
+       }
+   }
+
+This setting changes frequency to 30 minutes.
+
+.. code:: properties
+
+   dataSource {
+       default () {
+           uri = '...'
+       }
+       'watchdog-frequency' = 'PT15M'
+   }
+
+This one changes to 15 minutes.
+
+.. Note::
+
+   see `??? <#periodDurationValues>`__ for format details
+
+
+2.8.3. Using modified database schema
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+If you are using Tigase XMPP Server with modified schema (changed procedures or tables) and you do not want Tigase XMPP Server to maintain it and automatically upgrade, you can disable ``schema-management`` for any data source. If ``schema-management`` is disable for particular data source then Tigase XMPP Server will not update or modify database schema in any way. Moreover it will not check if schema version is correct or not.
+
+**Disabling ``schema-management`` for ``default`` data source**
+
+.. code:: tdsl
+
+   dataSource {
+       default () {
+           uri = '...'
+           'schema-management' = false
+       }
+   }
+
+.. Warning::
+
+    If ``schema-management`` is disabled, then it is administrator responsibility to maintain database schema and update it if needed (ie. if Tigase XMPP Server schema was changed).
+
+2.8.4. Schema files maintenance
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+This document describes schema files layout and assumptions about it. In addition it describes how and when it should be updated.
+
+Assumptions
+~~~~~~~~~~~
+
+Following assumptions are in place:
+
+-  All schema files are *loadable* multiple times - this is by far most important assumptions and it’s allow to get away without explicit and detailed checking of loaded version (it’s already handled on the schema level as of version 8.0.0)
+
+-  Required schema version is calculated from the component version (which is set in the project configuration file - usually ``pom.xml``, but it’s possible to override it in code via annotations - please see Developer Guild in Server documentation for details)
+
+-  we will maintain *"3 versions schema files"*, i.e. in the distribution package we will provide schema versions for the ``current_version`` and two major versions behind (and all maintenance version schema files) - this will allow *quick upgrade* even from rather older versions
+
+-  ``SNAPSHOT`` versions will print a log entry indicating that there may have been changes in schema and it’s recommended to run the upgrade (we are aiming at frequent releases thus mandatory schema version check will be done only with final version)
+
+Checks
+~~~~~~
+
+We will check:
+
+-  if it’s possible to upgrade the schema (based on the current schema version in the database and available SQL files and their respective versions - if );
+
+-  if it’s required to upgrade the schema during server startup (until 7.1.x [inclusive] it was done only for tigase-server, will be done by all components)
+
+-  if it’s required to upgrade the schema during run of ``upgrade-schema``) (if schema is already in the latest required version, executing all SQL files is not required hence speeding up upgrade)
+
+   -  During startup of ``SNAPSHOT`` version, even if the schema version match, a prompt to re-run ``upgrade-schema`` will be printed in the ``logs/tigase-console.log``
+
+Schema files layout
+~~~~~~~~~~~~~~~~~~~~
+
+Filename layout
+'''''''''''''''
+
+Basic schema filename layout consists of 3 basic parts:
+
+-  name of relational database management system (RDBMS) for which it’s intended (e.g. ``derby``, ``mysql``, ``postgresql``, ``sqlserver``);
+
+-  name of the Tigase component for which it’s intended;
+
+-  version of the schema file.
+
+For each component and version it’s possible (but not mandatory) to split all database related functionality into multiple files but it’s essential that they would be linked/included in the base file for particular database/component/version file. This allows separating Stored Procedures (``-sp``), base schema (``-schema``) and setting properties (``-props``). In principle the filename pattern looks as follows
+
+::
+
+   <RDBMS_name>-<tigase_component>-schema-<version>[-<sub_schema>].sql
+
+For example schema file for version 7.0.0 of Tigase Server for Derby looks as follow:
+
+::
+
+   derby-server-schema-7.0.0-schema.sql
+
+
+Files structure
+''''''''''''''''
+
+As mentioned before, we should support all versions matching ``old-stable``, ``stable`` and ``master``, which translates to two main versions behind *current-version*, that is version: *current-version - 2*). This results in having 3 versions of the schema in the repository at any given time (two of them being \``upgrades'' to the oldest, base schema):
+
+-  ``current-version`` *minus* 2: base schema
+
+-  ``current-version`` *minus* 1: all changes from ``current-version`` *minus* 2 to ``current-version`` *minus* 1
+
+-  ``current-version``: all changes from ``current-version`` *minus* 1 to ``current-version``
+
+.. Note::
+
+   ``current-version`` *MUST* always match version of the component (defined in pom.xml).
+
+ .. Note::
+
+   It’s possible to have multiple files within version (related to smaller, maintenance upgrade) as the SchemaLoader would collect all files which version falls within range and .
+
+For example with the release of version 8.0.0 this will translate to following versions:
+
+-  ``7.0.0``: base schema
+
+-  ``7.1.0``: all changes from ``7.0.0`` to ``7.1.0``
+
+-  ``8.0.0``: all changes from ``7.1.0`` to ``8.0.0``
+
+.. Note::
+
+   All schema files must be stored under ``src/main/database/``
+
+
+Handling of changes in the schema
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are two main workflows defined
+
+
+During release of the version
+''''''''''''''''''''''''''''''
+
+As we keep at the most only 3 versions of the schema, after release of the version we need to adjust (flatten) the files to maintain structure defined in *Files structure* (it may happen, that there wouldn’t be any changes in the schema for particular version which will result in relatively empty ``current-version`` schema file – only setting current version for component with ``setVersion('component','<current-version></current-version>');`` ).
+
+For example we are about to release version ``8.0.0``. This results in the following versions of the schema (in the example for the server) in the repository:
+
+-  ``<database>-server-schema-7.0.0.sql``: base schema
+
+-  ``<database>-server-schema-7.1.0.sql``: including changes for ``7.1.0``
+
+-  ``<database>-server-schema-8.0.0.sql``: including changes for ``8.0.0``
+
+.. Note::
+
+   It’s possible that there will be maintenance versions in the list as well, e.g.: ``<database>-server-schema-7.1.1.sql`` and ``<database>-server-schema-7.1.2.sql``
+
+After the release we specify the version of the next release in pom.xml (for example ``8.1.0`` and the same version will be the ``current-version`` making the oldest available version ``7.1.0``. Because of that we *MUST* incorporate all the changes in ``7.1.0`` onto ``7.0.0`` creating new base file with version ``7.1.0``, i.e.:
+
+-  ``<database>-server-schema-7.1.0.sql``: base schema
+
+-  ``<database>-server-schema-8.0.0.sql``: including changes for ``8.0.0``
+
+-  ``<database>-server-schema-8.1.0.sql``: including changes for ``8.1.0``
+
+Maintenance releases
+'''''''''''''''''''''
+
+Following cases will be discussed with solid-version examples. Comments will be provided in-line Following assumptions are made:
+
+-  Version succession: ``5.1.0``, ``5.2.0``, ``7.0.0``, ``7.1.0``, ``8.0.0``
+
+-  Versions mapping: ``master`` (``8.0.0``), ``stable`` (``7.1.0``), ``old-stable`` (``7.0.0``):
+
+   -  schema files in ``old-stable`` branch
+
+      -  5.1.0 (base)
+
+      -  5.2.0 (upgrade)
+
+      -  7.0.0 (upgrade)
+
+   -  schema files in ``stable`` branch
+
+      -  5.2.0 (base)
+
+      -  7.0.0 (upgrade)
+
+      -  7.1.0 (upgrade)
+
+   -  schema files in ``master`` branch
+
+      -  7.0.0 (base)
+
+      -  7.1.0 (upgrade)
+
+      -  8.0.0 (upgrade)
+
+
+Making a change in ``old-stable`` (and ``stable``)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If we made a schema change in ``old-stable`` version (and it’s branch) we must:
+
+-  create a new file with upgraded version number;
+
+-  propagate the change to the ``stable`` and ``master`` branch.
+
+Repository changes:
+
+-  schema files in ``old-stable`` branch
+
+   -  5.1.0 (base)
+
+   -  5.2.0 (upgrade)
+
+   -  7.0.0 (upgrade)
+
+   -  7.0.1 (upgrade) **←** making a *change* here results in the schema version being bumped to 7.0.1
+
+-  schema files in ``stable`` branch
+
+   -  5.2.0 (base)
+
+   -  7.0.0 (upgrade)
+
+   -  7.0.1 (upgrade) **←** we must port the *change* here
+
+   -  7.1.0 (upgrade)
+
+-  schema files in ``master`` branch
+
+   -  7.0.0 (base)
+
+   -  7.0.1 (upgrade) **←** we must port the *change* here
+
+   -  7.1.0 (upgrade)
+
+   -  8.0.0 (upgrade)
+
+
+Making a change in ``master``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+If we made a schema change in ``master`` version we don’t propagate the change to the ``stable`` and ``old-stable`` branch.
+
+-  schema files in ``old-stable`` branch
+
+   -  5.1.0 (base)
+
+   -  5.2.0 (upgrade)
+
+   -  7.0.0 (upgrade)
+
+-  schema files in ``stable`` branch
+
+   -  5.2.0 (base)
+
+   -  7.0.0 (upgrade)
+
+   -  7.1.0 (upgrade)
+
+-  schema files in ``master`` branch
+
+   -  7.0.0 (base)
+
+   -  7.1.0 (upgrade)
+
+   -  8.0.0 (upgrade) **←** we make the *change* here, as this is the development version schema version remains the same.
+
+
+Implementation details
+~~~~~~~~~~~~~~~~~~~~~~~
+
+In-file control
+''''''''''''''''
+
+There are two main control instructions (intended for ``SchemaLoader``):
+
+-  denoting Queries with ``-- QUERY START:`` and ``-- QUERY END:`` - each must be placed in own, separate file with the query being enclosed by the two of them, for example:
+
+   .. code:: sql
+
+      -- QUERY START:
+      call TigPutDBProperty('schema-version', '5.1');
+      -- QUERY END:
+
+-  sourcing other file with ``-- LOAD FILE: <path to .sql file>`` - path must be on the same line, following control instruction, for example:
+
+   .. code:: sql
+
+      -- LOAD FILE: database/mysql-server-schema-7.0.0-schema.sql
+
+
+Storing version in the database
+''''''''''''''''''''''''''''''''
+
+Each repository will have a table ``tig_schema_versions`` with the information about all installed components and it’s versions in that particular repository. There will be an associated stored procedure to obtain and set version:
+
+-  table:
+
+   .. code:: sql
+
+      tig_schema_versions (
+        component varchar(100) NOT NULL,
+        version varchar(100) NOT NULL,
+        last_update timestamp NOT NULL,
+        primary key (component)
+      );
+
+-  stored procedures ``get/setVersion(‘component’,'version');``
+
+It will be stored and maintained in the file named ``<RDBMS_name>-common-schema-<version>.sql``
+
+2.8.5. Database Preparation
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase uses generally the same database schema and the same set of stored procedures and functions on every database. However, the schema creation scripts and code for stored procedures is different for each database. Therefore the manual process to prepare database is different for each database system.
+
+Starting with v8.0.0, most of the database tasks have been automated and can be called using simple text, or using interactive question and answer style. We **DO NOT RECOMMEND** going through manual operation, however we have kept manual activation of different databases to the Appendix. If you are interested in how we manage and update our database schemas, you may visit the `??? <#SchemaMaintenance>`__ section of our Redmine installation for more detailed information.
+
+-  `The DBSchemaLoader Utility <#dbSchemaLoader>`__
+
+-  `Hashed User Passwords in Database <#hashedPasswords>`__
+
+-  `Support for MongoDB <#mongoDBSupport>`__
+
+Appendix entries
+
+-  `Manual installtion for MySQL <#prepareMysql>`__
+
+-  `Manual installtion for Derby <#prepareDerby>`__
+
+-  `Manual installtion for SQLServer <#prepareMssql>`__
+
+-  `Manual installtion for PostGRESQL <#preparePostgresql>`__
+
+Schema Utility
+~~~~~~~~~~~~~~
+
+With the release of v8.0.0 calling the Tigase dbSchemaLoader utility now can be done using tasks instead of calling the specific method. Support for Derby, MySQL, PostgreSQL, MSSQL, and MongoDB is available.
+
+In order to use this utility with any of the databases, you will need to first have the database environment up and running, and have established user credentials. You may use root or an account with administrator write privileges.
+
+Operation & Variables
+'''''''''''''''''''''
+
+Operation
+
+Operating the schema utility is quite easy! To use it run this command from the installation directory:
+
+.. code:: command
+
+   ./scripts/tigase.sh [task] [params_file.conf] [options]
+
+Operations are now converted to tasks, of which there are now three: ``install-schema``, ``upgrade-schema``, and ``destroy-schema``.
+
+-  ``upgrade-schema``: Upgrade the schema of the database specified in your ``config.tdsl`` configuration file. (options are ignored for this option)
+
+-  ``install-schema``: Install a schema to database.
+
+-  ``destroy-schema``: Destroy database and schemas. **DANGEROUS**
+
+Options
+
+Use the following options to customize. Options in bold are required, *{potential options are in brackets}*:
+
+-  ``--help`` Prints the help for the task.
+
+-  ``-I`` or ``--interactive`` - enables interactive mode which will prompt for parameters not defined.
+
+-  ``-T`` or ``--dbType`` - database type {derby, mongodb, mysql, postgresql, sqlserver}.
+
+-  ``-C`` or ``--components`` - Allows the specification of components for use when installing a schema.
+
+Usage
+'''''
+
+upgrade-schema
+
+This task will locate any schema versions above your current one, and will install them to the database configured in the ``config.tdsl`` file.
+
+.. Note::
+
+   To use this utility, you must have Tigase XMPP server fully setup with a configured configuration file.
+
+.. code:: command
+
+   ./scripts/tigase.sh upgrade-schema etc/tigase.conf
+
+Windows users will need to run the command using the following command:
+
+.. code:: windows
+
+   java -cp "jars/*" tigase.db.util.SchemaManager "upgrade-schema" --config-file=etc/config.tdsl
+
+install-schema
+
+This task will install a schema using the parameters provided.
+
+**If you are setting up a server manually, we HIGHLY recommend using this method**
+
+.. code:: command
+
+   ./scripts/tigase.sh install-schema [Options]
+
+This command will install tigase using a Derby database on one named ``tigasedb`` hosted on ``localhost``. The username and password editing the database is ``tigase_pass`` and ``root``. Note that ``-J`` explicitly adds the administrator, this is highly recommended with the ``-N`` passing the password.
+
+If you are using a windows system, you need to call the program directly:
+
+.. code:: windows
+
+   java -cp "jars/*" tigase.db.util.SchemaManager "install-schema" [options]
+
+
+Options
+
+Options for schema installation are as follows, required options are in bold
+
+-  ``--help``, Outputs the help.
+
+-  ``-I``, ``--interactive`` - enables interactive mode, which will result in prompting for any missing parameters.
+
+-  ``-C``, ``--components=`` - list of enabled components identifiers (+/-), possible values: [``amp``, ``bosh``, ``c2s``, ``eventbus``, ``ext-disco``, ``http``, ``mdns``, ``message-archive``, ``monitor``, ``muc``, ``pubsub``, ``push``, ``s2s``, ``socks5``, ``test``, ``unified-archive``, ``upload``, ``ws2s``] (default: amp,bosh,c2s,eventbus,http,message-archive,monitor,muc,pubsub,s2s,ws2s). **This is required for certain components like socks5.**
+
+-  ``-T``, ``--dbType=`` - database server type, possible values are: [``derby``, ``mongodb``, ``mysql``, ``postgresql``, ``sqlserver``] (*required*)
+
+-  ``-D``, ``--dbName=`` - name of the database that will be created (by default it is ``tigasedb``). (*required*)
+
+-  ``-H``, ``--dbHostname=`` - address of the database instance (by default it is ``localhost``). (*required*)
+
+-  ``-U``, ``--dbUser=`` - name of the user that will be created specifically to access Tigase XMPP Server database (default is ``tigase_user``). (*required*)
+
+-  ``-P``, ``--dbPass=`` - password of the user that will be created specifically to access Tigase XMPP Server database (default is ``tigase_pass``). (*required*)
+
+-  ``-R``, ``--rootUser=`` - database root account username used to create user and database (default is ``root``). (*required*)
+
+-  ``-A``, ``--rootPass=`` - database root account password used to create user and database (default is ``root``). (*required*)
+
+-  ``-S``, ``--useSSL`` - enable SSL support for database connection (if the database supports it) (default is false).
+
+-  ``-F``, ``--file=`` - comma separated list of SQL files that will be processed.
+
+-  ``-Q``, ``--query=`` - custom queries to be executed, see `Query function <#queryschema>`__ for details.
+
+-  ``-L``, ``--logLevel=`` - logger level used during loading process (default is ``CONFIG``).
+
+-  ``-J``, ``--adminJID=`` - comma separated list of administrator JID(s).
+
+-  ``-N``, ``--adminJIDpass=`` - password that will be used for the entered JID(s) - one password for all configured JIDs.
+
+-  ``--getURI=`` - generate database URI (default is ``false``).
+
+-  ``--ignoreMissingFiles=`` - force ignoring missing files errors (default is ``false``).
+
+Query function
+
+Should you decide to customize your own functions, or have specific information you want to put into the database, you can use the -query function to perform a single query step.
+
+.. code:: cmd
+
+   ./scripts/tigase.sh install-schema -T mysql -D tigasedb -R root -A root -Q "CREATE TABLE tigasedb.EXTRA_TABLE (id INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY, name VARCHAR(10) NOT NULL)"
+
+Of course this would break the schema for tigasedb by adding an unexpected table, you will receive the following message:
+
+::
+
+   tigase.db.util.DBSchemaLoader       printInfo          WARNING       Database schema is invalid
+
+But this is a demonstration how you may run a query through the database without the need to use another tool. Note that you will need to select the specific database for each query.
+
+destroy-schema
+
+
+This will destroy the database specified in the configuration file.
+
+.. Warning::
+
+    **THIS ACTION IS NOT REVERSIBLE**
+
+.. code:: cmd
+
+   ./scripts/tigase.sh destroy-schema etc/config.tdsl
+
+Only use this if you wish to destroy a database and not have the information recoverable.
+
+Windows users will need to call the method directly:
+
+.. code:: cmd
+
+   java -cp "jars/*" tigase.db.util.SchemaManager "destroy-schema" etc/config.tdsl
+
+
+A note about MySQL
+
+If you are using these commands, you may result in the following error:
+
+.. code:: bash
+
+   tigase.util.DBSchemaLoader       validateDBConnection    WARNING    Table 'performance_schema.session_variables' does not exist
+
+If this occurs, you will need to upgrade your version of MySQL using the following command:
+
+.. code:: bash
+
+   mysql_upgrade -u root -p --force
+
+After entering the password and upgrading MySQL the schema error should no longer show when working with Tigase databases.
+
+Prepare the MySQL Database for the Tigase Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This guide describes how to prepare MySQL database for connecting Tigase server.
+
+The MySQL database can be prepared in many ways. Most Linux distributions contain tools which allow you to go through all steps from the shell command line. To make sure it works on all platforms in the same way, we will first show how to do it under MySQL command line client.
+
+Configuring from MySQL command line tool
+'''''''''''''''''''''''''''''''''''''''''
+
+Run the MySQL command line client in either Linux or MS Windows environment and enter following instructions from the Tigase installation directory:
+
+.. code:: sql
+
+   mysql -u root -p
+
+Once logged in, create the database for the Tigase server:
+
+.. code:: sql
+
+   mysql> create database tigasedb;
+
+Add the ``tigase_user`` user and grant him access to the ``tigasedb`` database. Depending on how you plan to connect to the database (locally or over the network) use one of following commands or all if you are not sure:
+
+-  Grant access to tigase_user connecting from any network address.
+
+   .. code:: sql
+
+      mysql> GRANT ALL ON tigasedb.* TO tigase_user@'%'
+                  IDENTIFIED BY 'tigase_passwd';
+
+-  Grant access to tigase_user connecting from localhost.
+
+   .. code:: sql
+
+      mysql> GRANT ALL ON tigasedb.* TO tigase_user@'localhost'
+                  IDENTIFIED BY 'tigase_passwd';
+
+-  Grant access to tigase_user connecting from local machine only.
+
+   .. code:: sql
+
+      mysql> GRANT ALL ON tigasedb.* TO tigase_user
+                  IDENTIFIED BY 'tigase_passwd';
+
+And now you can update user permission changes in the database:
+
+.. code:: sql
+
+   mysql> FLUSH PRIVILEGES;
+
+.. Important::
+
+   It’s essential to enable `log_bin_trust_function_creators <https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#sysvar_log_bin_trust_function_creators>`__ option in MySQL server, for example by running:
+
+   .. code:: sql
+
+      mysql> SET GLOBAL log_bin_trust_function_creators = 1;
+
+Installing Schemas
+
+Starting with v8.0.0 the Schemas are no longer linked, and will need to manually be installed in the following order.
+
+Switch to the database you have created:
+
+.. code:: sql
+
+   mysql> use tigasedb;
+
+..  Note::
+
+   We are assuming you run the mysql client in Linux from the Tigase installation directory, so all file links will be relative.
+
+Next install the schema files:
+
+.. code:: sql
+
+   mysql> source database/mysql-common-0.0.1.sql;
+
+You will need to repeat this process for the following files:
+
+.. code:: list
+
+   mysql-common-0.0.1.sql
+   mysql-common-0.0.2.sql
+   mysql-server-7.0.0.sql
+   mysql-server-7.1.0.sql
+   mysql-server-8.0.0.sql
+   mysql-muc-3.0.0.sql
+   mysql-pubsub-3.1.0.sql
+   mysql-pubsub-3.2.0.sql
+   mysql-pubsub-4.0.0.sql
+   mysql-http-api-2.0.0.sql
+
+Other components may require installation such as:
+
+.. code:: list
+
+   mysql-socks5-2.0.0.sql
+   mysql-push-1.0.0.sql
+   mysql-message-archiving-2.0.0.sql
+   mysql-unified-archive-2.0.0.sql
+
+
+Windows instructions:
+
+On Windows you have probably to enter the full path, assuming Tigase is installed in C:\Program Files\Tigase:
+
+.. code:: sql
+
+   mysql> source c:/Program Files/Tigase/database/mysql-common-0.0.1.sql;
+   mysql> source c:/Program Files/Tigase/database/mysql-common-0.0.2.sql;
+   mysql> source c:/Program Files/Tigase/database/mysql-server-7.0.0.sql;
+   and so on...
+
+
+Configuring From the Linux Shell Command Line
+''''''''''''''''''''''''''''''''''''''''''''''
+
+Follow steps below to prepare the MySQL database:
+
+Create the database space for the Tigase server:
+
+.. code:: sql
+
+   mysqladmin -p create tigasedb
+
+Add the ``tigase_user`` user and grant access to the tigasedb database. Depending on how you plan to connect to the database (locally or over the network) use one of following commands or all if you are not sure:
+
+Selective access configuration
+
+Grant access to tigase_user connecting from any network address.
+
+.. code:: sql
+
+   echo "GRANT ALL ON tigasedb.* TO tigase_user@'%' \
+               IDENTIFIED BY 'tigase_passwd'; \
+               FLUSH PRIVILEGES;" | mysql -u root -pdbpass mysql
+
+
+Grant access to tigase_user connecting from localhost.
+
+.. code:: sql
+
+   echo "GRANT ALL ON tigasedb.* TO tigase_user@'localhost' \
+               IDENTIFIED BY 'tigase_passwd'; \
+               FLUSH PRIVILEGES;" | mysql -u root -pdbpass mysql
+
+
+Grant access to tigase_user connecting from local machine only.
+
+.. code:: sql
+
+   echo "GRANT ALL ON tigasedb.* TO tigase_user \
+               IDENTIFIED BY 'tigase_passwd'; \
+               FLUSH PRIVILEGES;" | mysql -u root -pdbpass mysql
+
+
+Schema Installation
+
+Load the proper mysql schemas into the database.
+
+.. code:: sql
+
+   mysql -u dbuser -p tigasedb < mysql-common-0.0.1.sql
+   mysql -u dbuser -p tigasedb < mysql-common-0.0.2.sql
+   etc..
+
+You will need to repeat this process for the following files:
+
+.. code:: list
+
+   mysql-common-0.0.1.sql
+   mysql-common-0.0.2.sql
+   mysql-server-7.0.0.sql
+   mysql-server-7.1.0.sql
+   mysql-server-8.0.0.sql
+   mysql-muc-3.0.0.sql
+   mysql-pubsub-3.1.0.sql
+   mysql-pubsub-3.2.0.sql
+   mysql-pubsub-4.0.0.sql
+   mysql-http-api-2.0.0.sql
+
+Other components may require installation such as:
+
+.. code:: list
+
+   mysql-socks5-2.0.0.sql
+   mysql-push-1.0.0.sql
+   mysql-message-archiving-2.0.0.sql
+   mysql-unified-archive-2.0.0.sql
+
+
+Configuring MySQL for UTF-8 Support
+'''''''''''''''''''''''''''''''''''
+
+In my.conf put following lines:
+
+.. code:: bash
+
+   [mysql]
+   default-character-SET=utf8
+
+   [client]
+   default-character-SET=utf8
+
+   [mysqld]
+   init_connect='SET collation_connection = utf8_general_ci; SET NAMES utf8;'
+   character-set-server=utf8
+   default-character-SET=utf8
+   collation-server=utf8_general_ci
+   skip-character-set-client-handshake
+
+Then connect to the database from the command line shell check settings:
+
+.. code:: sql
+
+   SHOW VARIABLES LIKE 'character_set_database';
+   SHOW VARIABLES LIKE 'character_set_client';
+
+If any of these shows something else then 'utf8' then you need to fix it using the command:
+
+.. code:: sql
+
+   ALTER DATABASE tigasedb DEFAULT CHARACTER SET utf8;
+
+You can now also test your database installation if it accepts UTF-8 data. The easiest way to ensure this is to just to create an account with UTF-8 characters:
+
+.. code:: sql
+
+   call TigAddUserPlainPw('żółw@some.domain.com', 'żółw');
+
+And then check that the account has been created:
+
+.. code:: sql
+
+   SELECT * FROM tig_users WHERE user_id = 'żółw@some.domain.com';
+
+If the last command gives you no results it means there is still something wrong with your settings. You might also want to check your shell settings to make sure your command line shell supports UTF-8 characters and passes them correctly to MySQL:
+
+.. code:: sh
+
+   export LANG=en_US.UTF-8
+   export LOCALE=UTF-8
+   export LESSCHARSET='utf-8'
+
+It seems that MySQL 5.0.x also needs extra parameters in the connection string: '&useUnicode=true&characterEncoding=UTF-8' while MySQL 5.1.x seems to not need it but it doesn’t hurt to have it for both versions. You have to edit ``etc/config.tdsl`` file and append this to the database connection string.
+
+For MySQL 5.1.x, however, you need to also update code for all database stored procedures and functions used by the Tigase. They are updated for Tigase version 4.4.x and up, however if you use an older version of the Tigase server, you can reload stored procedures using the file from SVN.
+
+Other MySQL Settings Worth Considering
+''''''''''''''''''''''''''''''''''''''
+
+There are a number of other useful options, especially for performance improvements. Please note, you will have to review them as some of them may impact data reliability and are useful for performance or load tests installations only.
+
+.. code:: bash
+
+   # InnoDB seems to be a better choice
+   # so lets make it a default DB engine
+   default-storage-engine = innodb
+
+Some the general MySQL settings which mainly affect performance:
+
+.. code:: bash
+
+   key_buffer = 64M
+   max_allowed_packet = 32M
+   sort_buffer_size = 64M
+   net_buffer_length = 64K
+   read_buffer_size = 16M
+   read_rnd_buffer_size = 16M
+   thread_stack = 192K
+   thread_cache_size = 8
+   query_cache_limit = 10M
+   query_cache_size = 64M
+
+InnoDB specific settings:
+
+.. code:: bash
+
+   # Keep data in a separate file for each table
+   innodb_file_per_table = 1
+   # Allocate memory for data buffers
+   innodb_buffer_pool_size = 1000M
+   innodb_additional_mem_pool_size = 100M
+   # A location of the MySQL database
+   innodb_data_home_dir = /home/databases/mysql/
+   innodb_log_group_home_dir = /home/databases/mysql/
+   # The main thing here is the 'autoextend' property
+   # without it your data file may reach maximum size and
+   # no more records can be added to the table.
+   innodb_data_file_path = ibdata1:10M:autoextend
+   innodb_log_file_size = 10M
+   innodb_log_buffer_size = 32M
+   # Some other performance affecting settings
+   innodb_flush_log_at_trx_commit = 2
+   innodb_lock_wait_timeout = 50
+   innodb_thread_concurrency = 16
+
+These settings may not be fully optimized for your system, and have been only tested on our systems. If you have found better settings for your systems, feel free to `let us know <http://tigase.net/contact>`__.
+
+
+Support for emoji and other icons
+---------------------------------
+
+Tigase Database Schema can support emojis and other icons, however by using UTF-8 in ``mysqld`` settings will not allow this. To employ settings to support emojis and other icons, we recommend you use the following in your MySQL configuration file:
+
+.. code:: properties
+
+   [mysqld]
+   character-set-server = utf8mb4
+   collation-server = utf8mb4_bin
+   character-set-client-handshake = FALSE
+
+Doing this, Tigase XMPP Server Database will still use ``utf8`` character set, with ``utf8_general_ci`` as collation, and only fields which require support for emojis will be converted to ``utf8mb4``.
+
+.. Note::
+
+   If for some reason, with above settings applied to your MySQL instance, you still receive :literal:`java.sql.SQLException: Incorrect string value: ` you should add to your database URI passed in Tigase XMPP Server following configuration `&useUnicode=true&characterEncoding=UTF-8`. If even this fails too, then you may try adding ``&connectionCollation=utf8mb4_bin`` as a last resort. This changes situation from previous versions that shipped older MySQL JDBC connector.
+
+.. Note::
+
+   Tigase XMPP Server databases should be created with ``utf8_general_ci`` collation as it will work properly and is fastest from ``utf8mb4_general_ci`` collations supported by MySQL
+
+Prepare the Derby Database for the Tigase Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This guide describes how to prepare Derby database for connecting the Tigase server.
+
+Basic Setup
+'''''''''''
+
+Preparation of Derby database is quite simple, but the following assumptions are made
+
+-  ``DerbyDB`` - Derby database name
+
+-  ``database/`` directory contains all necessary schema files
+
+-  ``jars/`` and ``libs/`` directories contains Tigase and Derby binaries
+
+General Approach
+
+From the main Tigase directory execute following commands (Linux and Windows accordingly)
+
+.. Note::
+
+   You must use these sql files on order FIRST!
+
+**Linux**
+
+.. code:: sh
+
+   java -Dij.protocol=jdbc:derby: -Dij.database="DerbyDB;create=true" -cp libs/derby.jar:libs/derbytools.jar:jars/tigase-server.jar org.apache.derby.tools.ij database/derby-common-0.0.1.sql
+
+**Windows**
+
+.. code:: sh
+
+   java -Dij.protocol=jdbc:derby: -Dij.database="DerbyDB;create=true" -cp libs\derby.jar;libs\derbytools.jar;jars\tigase-server.jar org.apache.derby.tools.ij "database\derby-common-0.0.1.sql"
+
+This will create Derby database named DerbyDB in the main Tigase directory and load common version for common v0.1.
+
+You will need to repeat this process again in for following order:
+
+.. code:: list
+
+   derby-common-0.0.1.sql
+   derby-common-0.0.2.sql
+   derby-server-7.0.0.sql
+   derby-server-7.1.0.sql
+   derby-server-8.0.0.sql
+   derby-muc-3.0.0.sql
+   derby-pubsub-3.1.0.sql
+   derby-pubsub-3.2.0.sql
+   derby-pubsub-4.0.0.sql
+   derby-http-api-2.0.0.sql
+
+Other components may require installation such as:
+
+.. code:: list
+
+   derby-socks5-2.0.0.sql
+   derby-push-1.0.0.sql
+   derby-unified-archive-2.0.0.sql
+
+Connecting Tigase to database
+''''''''''''''''''''''''''''''
+
+Once the database is setup, configure the ``config.tdsl`` file in Tigase and add the following configuration:
+
+.. code:: properties
+
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:{location of derby database};'
+       }
+   }
+
+Prepare the MS SQL Server Database for the Tigase Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This guide describes how to prepare the MS SQL Server database for connecting the Tigase server to it.
+
+It’s expected that a working installation of Microsoft SQL Server is present. The following guide will describe the necessary configurations required for using MS SQL Server with Tigase XMPP Server.
+
+Preparing MS SQL Server Instance
+'''''''''''''''''''''''''''''''''
+
+After installation of MS SQL Server an instance needs to be configure to handle incoming JDBC connections. For that purpose it’s required to open *SQL Server Configuration Manager*. In the left-hand side panel navigate to *SQL Server Configuration Manager*, then *SQL Server Network Configuration → Protocols for ${INSTANCE_NAME}*. After selecting instance in the right-hand side panel select TCP/IP and open *Properties*, in the Protocol tab in General section select Yes for Enabled property. In the IP Addresses tab select Yes for Active and Enabled properties of all IP Addresses that you want MS SQL Server to handle. Subsequently set the TCP Port property (if missing) to the default value - 1433. A restart of the instance may be required afterwards.
+
+Configuration using MS SQL Server Management Studio
+''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+In order to prepare the database you can use either a wizard or execute queries directly in the Query Editor. Firstly you need to establish a connection to the MS SQL Server instance. From Object Explorer select Connect and in the Connect to Server dialog enter administrator credentials.
+
+Using Wizards
+
+-  Create Login
+
+   In the left-hand side panel select Security → Logins and from context menu choose New Login, in the Wizard window enter desired Login name, select SQL Server authentication and enter desired password subsequently confirming action with OK
+
+-  Create Database
+
+   From the Object Explorer select Databases node and from context menu select New Database; in the Wizard window enter desired Database name and enter previously created Login name into Owner field; subsequently confirming action with OK.
+
+
+Using Queries
+
+From the Object Explorer root node’s context menu select New Query. In the Query windows execute following statements adjusting details to your liking:
+
+.. code:: sql
+
+   USE [master]
+   GO
+
+   CREATE DATABASE [tigasedb];
+   GO
+
+   CREATE LOGIN [tigase] WITH PASSWORD=N'tigase12', DEFAULT_DATABASE=[tigasedb]
+   GO
+
+   ALTER AUTHORIZATION ON DATABASE::tigasedb TO tigase;
+   GO
+
+
+
+Import Schema
+''''''''''''''
+
+From the File menu Select Open → File (or use Ctrl+O) and then open following files:
+
+.. code:: list
+
+   sqlserver-common-0.0.1.sql
+   sqlserver-common-0.0.2.sql
+   sqlserver-server-7.0.0.sql
+   sqlserver-server-7.1.0.sql
+   sqlserver-server-8.0.0.sql
+   sqlserver-muc-3.0.0.sql
+   sqlserver-pubsub-3.1.0.sql
+   sqlserver-pubsub-3.2.0.sql
+   sqlserver-pubsub-4.0.0.sql
+   sqlserver-http-api-2.0.0.sql
+
+.. Note::
+
+   These files must be done sequentially! They are not linked, and so may need to be done one at a time.
+
+Other components may require installation such as:
+
+.. code:: list
+
+   sqlserver-socks5-2.0.0.sql
+   sqlserver-push-1.0.0.sql
+   sqlserver-message-archiving-2.0.0.sql
+   sqlserver-unified-archive-2.0.0.sql
+
+Subsequently select created database from the list of Available Databases (Ctrl+U) available on the toolbar and execute each of the opened files in the order listed above.
+
+Configuring from command line tool
+'''''''''''''''''''''''''''''''''''
+
+Creation of the database and import of schema can be done from command line as well. In order to do that, execute following commands from the directory where Tigase XMPP Server is installed otherwise paths to the schema need to be adjusted accordingly:
+
+.. code:: bash
+
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -Q "CREATE DATABASE [%database%]"
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -Q "CREATE LOGIN [%user%] WITH PASSWORD=N'%password%', DEFAULT_DATABASE=[%database%]"
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -d %database% -Q "ALTER AUTHORIZATION ON DATABASE::%database% TO %user%;"
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -d %database% -i database\sqlserver-schema-7-1-schema.sql
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -d %database% -i database\sqlserver-schema-7-1-sp.sql
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -d %database% -i database\sqlserver-schema-7-1-props.sql
+   sqlcmd -S %servername% -U %root_user% -P %root_pass% -d %database% -i database\sqlserver-pubsub-schema-3.2.0.sql
+
+Above can be automatized with provided script %tigase-server%\scripts\db-create-sqlserver.cmd (note: it needs to be executed from main Tigase XMPP Server directory due to maintain correct paths):
+
+.. code:: sh
+
+   $ scripts\db-create-sqlserver.cmd %database_servername% %database_name% %tigase_username% %tigase_password% %root_username% %root_password%
+
+If no parameters are provided then the following defaults are used:
+
+.. code:: bash
+
+   %database_servername%=localhost
+   %database_name%=tigasedb
+   %tigase_username%=tigase
+   %tigase_password%=tigase12
+   %root_username%=root
+   %root_password%=root
+
+Tigase configuration - config.tdsl
+'''''''''''''''''''''''''''''''''''
+
+Configuration of the MS SQL Server follows general database convention.
+
+.. code:: bash
+
+   dataSource {
+       default () {
+           uri = 'jdbc:[jtds:]sqlserver://db_hostname:port[;property=val]'
+       }
+   }
+
+where any number of additional parameters can (and should) consist of:
+
+-  ``databaseName`` - name of the database
+
+-  ``user`` - username configured to access database
+
+-  ``password`` - password for the above username
+
+-  ``schema`` - name of the database schema
+
+-  ``lastUpdateCount`` - 'false' value causes all update counts to be returned, including those returned by server triggers
+
+Example:
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:sqlserver://hostname:1433;databaseName=tigasedb;user=tigase;password=tigase12;schema=dbo;lastUpdateCount=false'
+       }
+   }
+
+
+JDBC: jTDS vs MS JDBC driver
+'''''''''''''''''''''''''''''
+
+Tigase XMPP Server supports two JDBC drivers intended to be used with Microsoft SQL Server - one created and provided by Microsoft itself and the alternative implementation - jTDS. Tigase is shipped with the latter in the distribution packages. Starting with the version 7.1.0 we recommend using jDTS driver that is shipped with Tigase as JDBC driver created by Microsoft can cause problems with some components in cluster installations. MS driver can be downloaded form the website: `JDBC Drivers 4.0, 4.1 for SQL Server <http://www.microsoft.com/en-us/download/details.aspx?displaylang=en&id=11774>`__ then unpack the archive. Copy sqljdbc_4.0/enu/sqljdbc4.jar file to ${tigase-server}/jars directory.
+
+Depending on the driver used ``uri`` needs to be configured accordingly.
+
+-  Microsoft driver:
+
+   .. code:: dsl
+
+      dataSource {
+          default () {
+              uri = 'jdbc:sqlserver://...'
+          }
+      }
+
+-  jDTS driver
+
+   .. code:: bash
+
+      dataSource {
+          default () {
+              uri = 'jdbc:jdts://...'
+          }
+      }
+
+Prepare the PostgreSQL Database for the Tigase Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This guide describes how to prepare PostgreSQL database for connecting to Tigase server.
+
+The PostgreSQL database can be prepared in many ways. Below are presented two possible ways. The following assumptions apply to both methods:
+
+-  ``admin_db_user`` - database user with admin rights
+
+-  ``tigase_user`` - database user for Tigase
+
+-  ``tigasedb`` - database for Tigase
+
+Configuring from PostgreSQL Command Line Tool
+''''''''''''''''''''''''''''''''''''''''''''''
+
+Run the PostgreSQL command line client and enter following instructions:
+
+Add the ``tigase_user``:
+
+.. code:: sql
+
+   psql=# create role tigase_user with login password 'tigase123';
+
+Next, Create the database for the Tigase server with ``tigase_user`` as owner of database:
+
+.. code:: sql
+
+   psql=# create database tigasedb owner tigase_user;
+
+Schema Installation
+
+Load database schema to initialize the Tigase server from the file that corresponds to the version of Tigase you want to use. First you need to switch to ``tigasedb``.
+
+.. code:: sql
+
+   psql=# \connect tigasedb
+
+Begin by applying the basic Schema
+
+.. code:: sql
+
+   psql=# \i database/postgresql-common-0.0.1.sql
+
+Continue by adding the schema files listed below:
+
+.. code:: list
+
+   postgresql-common-0.0.1.sql
+   postgresql-common-0.0.2.sql
+   postgresql-server-7.0.0.sql
+   postgresql-server-7.1.0.sql
+   postgresql-server-8.0.0.sql
+   postgresql-muc-3.0.0.sql
+   postgresql-pubsub-3.1.0.sql
+   postgresql-pubsub-3.2.0.sql
+   postgresql-pubsub-4.0.0.sql
+   postgresql-http-api-2.0.0.sql
+
+Other components may require installation such as:
+
+.. code:: list
+
+   postgresql-socks5-2.0.0.sql
+   postgresql-push-1.0.0.sql
+   postgresql-message-archiving-2.0.0.sql
+   postgresql-unified-archive-2.0.0.sql
+
+Configuring From the Linux Shell Command Line
+''''''''''''''''''''''''''''''''''''''''''''''
+
+Follow steps below to prepare the PostgreSQL database:
+
+First, add the ``tigase_user``:
+
+.. code:: sql
+
+   createuser -U admin_db_user -W -D -R -S -P tigase_user
+
+You will be asked for credentials for admin_db_user and password for new database user.
+
+Create the database for the Tigase server with tigase_user as owner of database:
+
+.. code:: sql
+
+   createdb -U admin_db_user -W -O tigase_user tigasedb
+
+Database Schema Installation
+
+Load database schema to initialize the Tigase server
+
+.. code:: sql
+
+   psql -q -U tigase_user -W tigasedb -f database/postgresql-common-0.0.1.sql
+   psql -q -U tigase_user -W tigasedb -f database/postgresql-common-0.0.2.sql
+   etc..
+
+Continue by adding the schema files listed below:
+
+.. code:: list
+
+   postgresql-common-0.0.1.sql
+   postgresql-common-0.0.2.sql
+   postgresql-server-7.0.0.sql
+   postgresql-server-7.1.0.sql
+   postgresql-server-8.0.0.sql
+   postgresql-muc-3.0.0.sql
+   postgresql-pubsub-3.1.0.sql
+   postgresql-pubsub-3.2.0.sql
+   postgresql-pubsub-4.0.0.sql
+   postgresql-http-api-2.0.0.sql
+
+Other components may require installation such as:
+
+.. code:: list
+
+   postgresql-socks5-2.0.0.sql
+   postgresql-push-1.0.0.sql
+   postgresql-message-archiving-2.0.0.sql
+   postgresql-unified-archive-2.0.0.sql
+
+.. Note::
+
+   The above commands should be executed from the main Tigase directory. The initialization schema file should be also available locally in database/ directory of your Tigase installation.
+
+Preparing Tigase for MongoDB
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tigase now supports MongoDB for auth, settings, and storage repositories. If you wish to use MongoDB for Tigase, please use this guide to help you.
+
+Dependencies
+''''''''''''
+
+To run Tigase MongoDB support library requires drivers for MongoDB for Java which can be downloaded from `here <https://github.com/mongodb/mongo-java-driver/releases>`__. This driver needs to be placed in ``jars/`` directory located in Tigase XMPP Server installation directory. If you are using a dist-max distribution, it is already included.
+
+Configuration
+''''''''''''''
+
+Note that fresh installations of MongoDB do not come with users or databases installed. Once you have setup MongoDB you will need to create a user to be used with Tigase. To do this, bring up the mongo console by running mongo.exe in a cmd window for windows, or run mongo in linux. Once connected, enter then following:
+
+.. code:: bash
+
+   use admin
+   db.createUser( { user: "tigase",
+                    pwd: "password",
+                    customData: { employeeId: 12345 },
+                    roles: [ "root" ]
+                   }
+                 )
+
+Be sure to give this user a ``root`` role in order to properly write to the database. Once you receive a ``user successfully created`` message, you are ready to install tigase on MongoDB.
+
+Configuration of user repository for Tigase XMPP Server
+
+To configure Tigase XMPP Server to use MongoDB you need to set ``dataSource`` in etc/config.tdsl file to proper MongoDB URI pointing to which MongoDB database should be used (it will be created by MongoDB if it does not exist). ``userRepository`` property should not be set to let Tigase XMPP Server auto-detect proper implementation of ``UserRepository``. Tigase XMPP Server will create proper collections in MongoDB if they do not exist so no schema files are necessary.
+
+Example configuration of XMPP Server pointing to MongoDB database ``tigase_test`` in a local instance:
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'mongodb://user:pass@localhost/tigase_test'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+
+If Tigase Server is not able to detect a proper storage layer implementation, it can be forced to use one provided by Tigase using the following lines in ``etc/config.tdsl`` file:
+
+.. code:: dsl
+
+   userRepository {
+       default () {
+           cls = 'tigase.mongodb.MongoRepository'
+       }
+   }
+   authRepository {
+       default () {
+           cls = 'tigase.mongodb.MongoRepository'
+       }
+   }
+
+Every component should be able to use proper implementation to support MongoDB using this URI. Also MongoDB URI can be passed as any URI in configuration of any component.
+
+Configuration for MUC
+
+By default, MUC component will use MongoDB to store data if Tigase is configured to use it as a default store. However, if you would like to use a different MongoDB database to store MUC message archive, you can do this by adding the following lines to ``etc/config.tdsl`` file:
+
+.. code:: dsl
+
+   muc {
+       'history-db-uri' = 'mongodb://user:pass@localhost/tigase_test'
+   }
+
+If MUC components fails to detect and use a proper storage layer for MongoDB, you can force it to use one provided by Tigase by using the following line in the ``config.tdsl`` file:
+
+.. code:: dsl
+
+   muc {
+       'history-db' = 'tigase.mongodb.muc.MongoHistoryProvider'
+   }
+
+
+Configuration for PubSub
+
+By default, PubSub component will use MongoDB to store data if Tigase is configured to use it as a default store. However, if you would like to use a different MongoDB database to store PubSub component data, you can do this by adding the following lines to ``etc/config.tdsl`` file:
+
+.. code:: dsl
+
+   pubsub {
+       'pubsub-repo-url' = 'mongodb://user:pass@localhost/tigase_test'
+   }
+
+If the PubSub components fails to detect and use a proper storage layer for MongoDB, you can force it to use one provided by Tigase by using the following line in the ``config.tdsl`` file:
+
+.. code:: dsl
+
+   pubsub {
+       'pubsub-repo-class' = 'tigase.mongodb.pubsub.PubSubDAOMongo'
+   }
+
+
+Configuration for Message Archiving
+
+By default, the Message Archiving component will use MongoDB to store data if Tigase is configured to use it as a default store. However, if you would like to use a different MongoDB database to store message archives, you can do this by adding the following lines to ``etc/config.tdsl`` file:
+
+.. code:: dsl
+
+   'message-archive' {
+       'archive-repo-uri' = 'mongodb://user:pass@localhost/tigase_test'
+   }
+
+If Message Archiving component fails to detect and use a proper storage layer for MongoDB, you can force it to use one provided by Tigase by using the following line in the ``config.tdsl`` file:
+
+.. code:: dsl
+
+   'message-archive' {
+       'archive-repo-class' = 'tigase.mongodb.archive.MongoMessageArchiveRepository'
+   }
+
+
+Schema Description
+'''''''''''''''''''
+
+This description contains only basic description of schema and only basic part of it. More collections may be created if additional components of Tigase XMPP Server are loaded and configured to use MongoDB.
+
+Tigase XMPP Server Schema
+-------------------------
+
+Basic schema for UserRespository and AuthRepository consists of two collections: . tig_users - contains list of users . tig_nodes - contains data related to users in tree-like way
+
+``tig_users`` collection contains the following fields:
+
+.. table:: Table 9. tig_users
+
+   +----------+--------------------------------------------------------------------+
+   | Name     | Description                                                        |
+   +==========+====================================================================+
+   | \_id     | id of user which is SHA256 hash of users jid (raw byte array).     |
+   +----------+--------------------------------------------------------------------+
+   | user_id  | contains full user jid.                                            |
+   +----------+--------------------------------------------------------------------+
+   | domain   | domain to which user belongs for easier lookup of users by domain. |
+   +----------+--------------------------------------------------------------------+
+   | password | password of user (will be removed after upgrade to 8.0.0).         |
+   +----------+--------------------------------------------------------------------+
+
+``tig_nodes`` collection contains the following fields
+
+.. table:: Table 10. tig_nodes
+
+   +-------+--------------------------------------------------------------------------+
+   | Name  | Description                                                              |
+   +=======+==========================================================================+
+   | \_id  | id of row auto-generated by MongoDB.                                     |
+   +-------+--------------------------------------------------------------------------+
+   | uid   | id of user which is SHA256 hash of users jid (raw byte array).           |
+   +-------+--------------------------------------------------------------------------+
+   | node  | full path of node in tree-like structure separated by / (may not exist). |
+   +-------+--------------------------------------------------------------------------+
+   | key   | key for which value for node is set.                                     |
+   +-------+--------------------------------------------------------------------------+
+   | value | value which is set for node key.                                         |
+   +-------+--------------------------------------------------------------------------+
+
+Tigase XMPP Server also uses additional collections for storage of Offline Messages
+
+.. table:: Table 11. msg_history collection
+
+   +-----------+-----------------------------------------------------------------------------+
+   | Name      | Description                                                                 |
+   +===========+=============================================================================+
+   | from      | full user jid of message sender.                                            |
+   +-----------+-----------------------------------------------------------------------------+
+   | from_hash | SHA256 hash of message sender jid as raw byte array.                        |
+   +-----------+-----------------------------------------------------------------------------+
+   | to        | full users jid of message recipient.                                        |
+   +-----------+-----------------------------------------------------------------------------+
+   | to_hash   | SHA256 hash of message recipient full jid as raw byte array.                |
+   +-----------+-----------------------------------------------------------------------------+
+   | ts        | timestamp of message as date.                                               |
+   +-----------+-----------------------------------------------------------------------------+
+   | message   | serialized XML stanza containing message.                                   |
+   +-----------+-----------------------------------------------------------------------------+
+   | expire-at | timestamp of expiration of message (if message contains AMP expire-at set). |
+   +-----------+-----------------------------------------------------------------------------+
+
+Due to changes in authentication and credentials storage in AuthRepository, we moved ``password`` field from ``tig_users`` collection to a newly created collection called ``tig_user_credentials``.
+
+This new collection has following fields:
+
++----------------+----------------------------------------------------------------------------------+
+| Name           | Description                                                                      |
++================+==================================================================================+
+| \_id           | id of document automatically generated by MongoDB                                |
++----------------+----------------------------------------------------------------------------------+
+| uid            | SHA256 hash of a user for which credentails are stored                           |
++----------------+----------------------------------------------------------------------------------+
+| username       | username provided during authentication (or ``default``)                         |
++----------------+----------------------------------------------------------------------------------+
+| account_status | name of an account state (copy of value stored in user document from`tig_users`) |
++----------------+----------------------------------------------------------------------------------+
+
+Additionally for each mechanism we store separate field in this object, so for:
+
+-  ``PLAIN`` we have ``PLAIN`` field with value for this mechanism
+
+-  ``SCRAM-SHA-1`` we have ``SCRAM-SHA-1`` field with value for this mechanism
+
+-  etc…​
+
+Upgrade is not done in one step, and rather will be done once a particular user will log in. During authentication if there is no data in ``tig_user_credentials``, Tigase XMPP Server will check if ``password`` field in ``tig_user`` exists. If it does, and it is filled credentials will be migrated to the new collection.
+
+2.8.6. Hashed User Passwords in Database
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
