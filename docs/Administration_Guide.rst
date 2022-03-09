@@ -6232,7 +6232,6 @@ These settings may not be fully optimized for your system, and have been only te
 
 
 Support for emoji and other icons
----------------------------------
 
 Tigase Database Schema can support emojis and other icons, however by using UTF-8 in ``mysqld`` settings will not allow this. To employ settings to support emojis and other icons, we recommend you use the following in your MySQL configuration file:
 
@@ -6259,8 +6258,7 @@ Prepare the Derby Database for the Tigase Server
 This guide describes how to prepare Derby database for connecting the Tigase server.
 
 Basic Setup
-'''''''''''
-
+''''''''''''
 Preparation of Derby database is quite simple, but the following assumptions are made
 
 -  ``DerbyDB`` - Derby database name
@@ -6843,6 +6841,2323 @@ Upgrade is not done in one step, and rather will be done once a particular user 
 
 2.8.6. Hashed User Passwords in Database
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. Warning::
+
+   This feature is still available, but passwords are stored encrypted by default since v8.0.0. We do not recommend using these settings.
+
+By default, user passwords are stored in plain-text in the Tigase’s database. However, there is an easy way to have them encoded in either one of already supported ways or to even add a new encoding algorithm on your own.
+
+Storing passwords in hashed format in the database makes it possible to avoid using a plain-text password authentication mechanism. You cannot have hashed passwords in the database and non-plain-text password authentication. On the other hand, the connection between the server and the client is almost always secured by SSL/TLS so the plain-text password authentication method is perhaps less of a problem than storing plain-text passwords in the database.
+
+Nevertheless, it is simple enough to adjust this in Tigase’s database.
+
+Shortcut
+~~~~~~~~
+
+Connect to your database from a command line and execute following statement for MySQL database:
+
+.. code:: sql
+
+   call TigPutDBProperty('password-encoding', 'encoding-mode');
+
+Where encoding mode is one of the following:
+
+-  ``MD5-PASSWORD`` the database stores MD5 hash code from the user’s password.
+
+-  ``MD5-USERID-PASSWORD`` the database stores MD5 hash code from concatenated user’s bare JID and password.
+
+-  ``MD5-USERNAME-PASSWORD`` the database stores MD5 hash code from concatenated user’s name (localpart) and password.
+
+For example:
+
+.. code:: sql
+
+   call TigPutDBProperty('password-encoding', 'MD5-PASSWORD');
+
+Full Route
+~~~~~~~~~~~
+
+The way passwords are stored in the DB is controlled by Tigase database schema property. Properties in the database schema can be set by a stored procedure called: ``TigPutDBProperty(key, value)``. Properties from the DB schema can be retrieved using another stored function called: ``TigGetDBProperty(key)``.
+
+The simplest way to call them is via command-line interface to the database.
+
+For the purpose of this guide let’s say we have a MySQL database and a test account: ``test@example.com`` with password ``test77``.
+
+By default, most of DB actions for Tigase, are performed using stored procedures including user authentication. So, the first thing to do is to make sure the stored procedures are working correctly.
+
+Create a Test User Account
+'''''''''''''''''''''''''''
+
+To add a new user account we use a stored procedure: ``TigAddUserPlainPw(bareJid, password)``. As you can see there is this strange appendix to the procedure name: ``PlainPw``. This procedure accepts plain passwords regardless how it is stored in the database. So it is safe and easy to use either for plain-text passwords or hashed in the DB. There are also versions of procedures without this appendix but they are sensitive on the data format and always have to pass password in the exact format it is stored in the database.
+
+So, let’s add a new user account:
+
+.. code:: sql
+
+   call TigAddUserPlainPw('test@example.com', 'test77');
+
+If the result was 'Query OK', then it means the user account has been successfully created.
+
+Test User Authentication
+'''''''''''''''''''''''''
+
+We can now test user authentication:
+
+.. code:: sql
+
+   call TigUserLoginPlainPw('test@example.com', 'test77');
+
+If authentication was successful the result looks like this:
+
+.. code:: sql
+
+   +--------------------+
+   | user_id            |
+   +--------------------+
+   | 'test@example.com' |
+   +--------------------+
+   1 row in set (0.01 sec)
+
+   Query OK, 0 rows affected (0.01 sec)
+
+If authentication was unsuccessful, the result looks like this:
+
+.. code:: sql
+
+   +---------+
+   | user_id |
+   +---------+
+   |    NULL |
+   +---------+
+   1 row in set (0.01 sec)
+
+   Query OK, 0 rows affected (0.01 sec)
+
+Password Encoding Check
+''''''''''''''''''''''''
+
+``TigGetDBProperty`` is a function, not a procedure in MySQL database so we have to use select to call it:
+
+.. code:: sql
+
+   select TigGetDBProperty('password-encoding');
+
+Most likely output is this:
+
+.. code:: sql
+
+   +---------------------------------------+
+   | TigGetDBProperty('password-encoding') |
+   +---------------------------------------+
+   | NULL                                  |
+   +---------------------------------------+
+   1 row in set, 1 warning (0.00 sec)
+
+Which means a default password encoding is used, in plain-text and thus no encoding. And we can actually check this in the database directly:
+
+.. code:: sql
+
+   select uid, user_id, user_pw from tig_users where user_id = 'test@example.com';
+
+And expected result with plain-text password format would be:
+
+.. code:: sql
+
+   +-----+--------------------+---------+
+   | uid | user_id            | user_pw |
+   +-----+--------------------+---------+
+   |  41 | 'test@example.com' | test77  |
+   +-----+--------------------+---------+
+   1 row in set (0.00 sec)
+
+Password Encoding Change
+'''''''''''''''''''''''''
+
+Now let’s set password encoding to MD5 hash:
+
+.. code:: sql
+
+   call TigPutDBProperty('password-encoding', 'MD5-PASSWORD');
+
+'Query OK', means the password encoding has been successfully changed. Of course we changed the property only. All the existing passwords in the database are still in plain-text format. Therefore we expect that attempt to authenticate the user would fail:
+
+.. code:: sql
+
+   call TigUserLoginPlainPw('test@example.com', 'test777');
+   +---------+
+   | user_id |
+   +---------+
+   |    NULL |
+   +---------+
+   1 row in set (0.00 sec)
+
+   Query OK, 0 rows affected (0.00 sec)
+
+We can fix this by updating the user’s password in the database:
+
+.. code:: sql
+
+   call TigUpdatePasswordPlainPw('test@example.com', 'test777');
+   Query OK, 1 row affected (0.01 sec)
+
+   mysql> call TigUserLoginPlainPw('test@example.com', 'test777');
+   +--------------------+
+   | user_id            |
+   +--------------------+
+   | 'test@example.com' |
+   +--------------------+
+   1 row in set (0.00 sec)
+
+   Query OK, 0 rows affected (0.00 sec)
+
+2.8.7. Tigase Server and Multiple Databases
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Splitting user authentication data from all other XMPP information such as roster, vcards, etc…​ was almost always possible in Tigase XMPP Server. Possible and quite simple thing to configure. Also it has been always possible and easy to assign a different database for each Tigase component (MUC, PubSub, AMP), for recording the server statistics. Almost every data type or component can store information in a different location, simple and easy to setup through the configuration file.
+
+However it is much less known that it is also possible to have a different database for each virtual domain. This applies to both the user repository and authentication repository. This allows for very interesting configuration such as user database sharing where each shard keeps users for a specific domain, or physically split data based on virtual domain if each domain refers to a different customer or group of people.
+
+How can we do that then?
+
+This is very easy to do through the Tigase’s configuration file.
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://db2.tigase/dbname?user&password'
+       }
+       'default-auth' () {
+           uri = 'jdbc:mysql://db1.tigase/dbname?user&password'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {
+           cls = 'tigase.db.jdbc.TigaseCustomAuth'
+           'data-source' = 'default-auth'
+       }
+   }
+
+This configuration defines just a default databases for both user repository and authentication repository. Default means it is used when there is no repository specified for a particular virtual domain. However, you can have a separate, both user and authentication repository for each virtual domain.
+
+Here is, how it works:
+
+First, let’s define our default database for all VHosts
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://db2.tigase/dbname?user&password'
+       }
+       'default-auth' () {
+           uri = 'jdbc:mysql://db1.tigase/dbname?user&password'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {
+           cls = 'tigase.db.jdbc.TigaseCustomAuth'
+           'data-source' = 'default-auth'
+       }
+   }
+
+Now, we have VHost: domain1.com User authentication data for this VHost is stored in Drupal database
+
+.. code:: dsl
+
+   dataSource {
+     'domain1.com-auth' () {
+       uri = jdbc:mysql://db7.tigase/dbname?user&password'
+     }
+   }
+   authRepository {
+     domain1.com () {
+       cls = 'tigase/db/jdbc.TigaseCustomAuth'
+       'data-source' = 'domain1.com-auth'
+     }
+   }
+
+All other user data is stored in Tigase’s standard database in MySQL
+
+.. code:: dsl
+
+   dataSource {
+     'domain1.com' () {
+       uri = jdbc:mysql://db4.tigase/dbname?user&password'
+     }
+   }
+   userRepository {
+     domain1.com () {}
+   }
+
+Next VHost: domain2.com User authentication is in LDAP server but all other user data is stored in Tigase’s standard database
+
+.. code:: dsl
+
+   authRepository {
+       domain2.com () {
+           cls = 'tigase.db.ldap.LdapAuthProvider'
+           uri = 'ldap://ldap.domain2.com:389'
+           'data-source' = 'default'
+       }
+   }
+
+Now is something new, we have a custom authentication repository and separate user settings for a single domain. Please note how we define the VHost for which we set custom parameters
+
+.. code:: dsl
+
+   authRepository {
+       domain2.com {
+           'user-dn-pattern' = 'cn=,ou=,dc=,dc='
+       }
+   }
+
+All other user data is stored in the same as default repository
+
+.. code:: dsl
+
+   userRepository {
+       domain2.com () {}
+   }
+   dataSource {
+       domain2.com () {
+           uri = 'jdbc:mysql://db2.tigase/dbname?user&password'
+       }
+   }
+
+When combined, the DSL output should look like this:
+
+.. code:: dsl
+
+   dataSource {
+       domain2.com () {
+           uri = 'jdbc:mysql://db2.tigase/dbname?user&password'
+       }
+   }
+   userRepository {
+       domain2.com () {}
+   }
+   authRepository {
+       domain2.com () {
+           cls = 'tigase.db.ldap.LdapAuthProvider'
+           uri = 'ldap://ldap.domain2.com:389'
+           'user-dn-pattern' = 'cn=,ou=,dc=,dc='
+       }
+   }
+
+Next VHost: domain3.com Again user authentication is in LDAP server but pointing to a different LDAP server with different access credentials and parameters. User information is stored in a postgreSQL database.
+
+.. code:: dsl
+
+   dataSource {
+       domain3.com () {
+           uri = 'jdbc:pgsql://db.domain3.com/dbname?user&password'
+       }
+   }
+   userRepository {
+       domain3.com () {}
+   }
+   authRepository {
+       domain3.com () {
+           cls = 'tigase.db.ldap.LdapAuthProvider'
+           uri = 'ldap://ldap.domain3.com:389'
+           'user-dn-pattern' = 'cn=,ou=,dc=,dc='
+       }
+   }
+
+For VHost: domain4.com all the data, both authentication and user XMPP data are stored on a separate MySQL server with custom stored procedures for both user login and user logout processing.
+
+.. code:: dsl
+
+   dataSource {
+       domain4.com () {
+           uri = 'jdbc:mysql://db14.domain4.com/dbname?user&password'
+       }
+   }
+   userRepository {
+       domain4.com () {}
+   }
+   authRepository {
+       domain4.com () {
+           cls = 'tigase.db.jdbc.TigaseCustomAuth'
+           'user-login-query' = '{ call UserLogin(?, ?) }'
+           'user-logout-query' = '{ call UserLogout(?) }'
+           'sasl-mechs' = [ 'PLAIN', 'DIGEST-MD5' ]
+       }
+   }
+
+As you can see, it requires some writing but flexibility is very extensive and you can setup as many separate databases as you need or want. If one database (recognized by the database connection string) is shared among different VHosts, Tigase still uses a single connection pool, so it won’t create an excessive number of connections to the database.
+
+2.8.8. Importing User Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+You can easily copy data between Tigase compatible repositories that is repositories for which there is a database connector. However, it is not that easy to import data from an external source. Therefore a simple data import functionality has been added to repository utilities package.
+
+You can access repository utilities through command ``./bin/repo.sh`` or ``./scripts/repo.sh`` depending on whether you use a binary package or source distribution.
+
+``-h`` parameter gives you a list of all possible parameters:
+
+.. code:: sh
+
+   ./scripts/repo.sh -h
+
+   Parameters:
+    -h          this help message
+    -sc class   source repository class name
+    -su uri     source repository init string
+    -dc class   destination repository class name
+    -du uri     destination repository init string
+    -dt string  data content to set/remove in repository
+    -u user     user ID, if given all operations are only for that ID
+                if you want to add user to AuthRepository parameter must
+                in form: "user:password"
+    -st         perform simple test on repository
+    -at         simple test for adding and removing user
+    -cp         copy content from source to destination repository
+    -pr         print content of the repository
+    -n          data content string is a node string
+    -kv         data content string is node/key=value string
+    -add        add data content to repository
+    -del        delete data content from repository
+    ------------
+    -roster     check the user roster
+    -aeg [true|false]  Allow empty group list for the contact
+    -import file  import user data from the file of following format:
+            user_jid, password, roser_jid, roster_nick, subscription, group
+
+
+
+   Note! If you put UserAuthRepository implementation as a class name
+         some operation are not allowed and will be silently skipped.
+         Have a look at UserAuthRepository to see what operations are
+         possible or what operation does make sense.
+         Alternatively look for admin tools guide on web site.
+
+The most critical parameters are the source repository class name and the initialization string. Therefore there are a few example preset parameters which you can use and adjust for your system. If you look inside the ``repo.sh`` script you can find at the end of the script following lines:
+
+.. code:: sh
+
+   XML_REP="-sc tigase.db.xml.XMLRepository -su ../testsuite/user-repository.xml_200k_backup"
+   MYSQL_REP="-sc tigase.db.jdbc.JDBCRepository -su jdbc:mysql://localhost/tigase?user=root&password=mypass"
+   PGSQL_REP="-sc tigase.db.jdbc.JDBCRepository -su jdbc:postgresql://localhost/tigase?user=tigase"
+
+   java $D -cp $CP tigase.util.RepositoryUtils $MYSQL_REP $*
+
+You can see that the source repository has been set to MySQL database with ``tigase`` as the database name, ``root`` the database user and ``mypass`` the user password.
+
+You can adjust these settings for your system.
+
+Now to import data to your repository simply execute the command:
+
+.. code:: sh
+
+   ./bin/repo.sh -import import-file.txt
+
+*Note, the import function is available from* **b895**
+
+The format of the import file is very simple. This is a flat file with comma separated values:
+
+.. code:: bash
+
+   jid,password,roster_jid,roster_nick,subscriptio,group
+
+To create such a file from MySQL database you will have to execute a command like this one:
+
+.. code:: sql
+
+   SELECT a, b, c, d INTO OUTFILE 'import-file.txt'
+   FIELDS TERMINATED BY ','
+   LINES TERMINATED BY '\n'
+   FROM test_table;
+
+2.8.9. Importing Existing Data
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Information about importing user data from other databases.
+
+Connecting the Tigase Server to MySQL Database
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Please before continuing reading of this manual have a look at the `initial MySQL database setup <#prepareMysql>`__. It will help you with database preparation for connecting with Tigase server.
+
+This guide describes MySQL database connection parameters.
+
+This guide is actually very short as there are example configuration files which can be used and customized for your environment.
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://localhost/tigasedb?user=tigase_user&password=mypass'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+
+This is the basic setup for setting up an SQL repository for Tigase. dataSource contains the uri for ``default`` which is the mysql database. MySQL connector requires connection string in the following format: ``jdbc:mysql://[hostname]/[database name]?user=[user name]&password=[user password]``
+
+Edit the ``config.tdsl`` file for your environment.
+
+Start the server using following command:
+
+.. code:: sh
+
+   ./scripts/tigase.sh start etc/tigase.conf
+
+Integrating Tigase Server with Drupal
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+First of all, Tigase can authenticate users against a Drupal database which means you have the same user account for both Drupal website and the XMPP server. Moreover in such a configuration all account management is done via Drupal web interface like account creation, password change update user details and so on. Administrator can temporarily disable user account and this is followed by Tigase server too.
+
+Connecting to Drupal Database
+''''''''''''''''''''''''''''''
+
+The best way to setup Tigase with Drupal database is via the ``config.tdsl`` file where you can put initial setting for Tigase configuration.
+
+If you look in ``etc/`` directory of your Tigase installation you should find a the file there.
+
+All you need to connect to Drupal database is set the following:
+
+.. code:: dsl
+
+   dataSource {
+       'default-auth' () {
+           uri = 'jdbc:mysql://localhost/drupal?user=drupalusr&password=drupalpass'
+       }
+   }
+   authRepository {
+       default () {
+           cls = 'tigase.db.jdbc.DrupalWPAuth'
+           'data-source' = 'default-auth'
+       }
+   }
+
+Typically, you will need to have drupal for authentication, and another for user repository. In this case, we will use SQL for user DB.
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'jdbc:mysql://localhost/tigasedb?user=tigase_user&password=mypass'
+       }
+       'default-auth' () {
+           uri = 'jdbc:mysql://localhost/drupal?user=drupalusr&password=drupalpass'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {
+           cls = 'tigase.db.jdbc.DrupalWPAuth'
+           'data-source' = 'default-auth'
+       }
+   }
+
+In theory you can load Tigase database schema to Drupal database and then both ``db-uris`` would have the same database connection string. More details about setting up and connecting to MySQL database can be found in the `MySQL guide <#prepareMysql>`__.
+
+Now run the Tigase server.
+
+.. code:: sh
+
+   ./scripts/tigase.sh start etc/tigase.conf
+
+Now you can register an account on your Drupal website and connect with an XMPP client using the account details.
+
+.. Note::
+
+   You have to enable plain password authentication in your XMPP client to connect to Tigase server with Drupal database.
+
+PostgreSQL Database Use
+~~~~~~~~~~~~~~~~~~~~~~~
+
+This guide describes how to configure Tigase server to use `PostgreSQL <http://www.postgresql.org/>`__ database as a user repository.
+
+If you used an XML based user repository before you can copy all user data to PostgreSQL database using repository management tool. All steps are described below.
+
+PostgreSQL Database Preparation
+''''''''''''''''''''''''''''''''
+
+Create new database user account which will be used to connect to your database:
+
+.. code:: sh
+
+   # createuser
+   Enter name of user to add: tigase
+   Shall the new user be allowed to create databases? (y/n) y
+   Shall the new user be allowed to create more new users? (y/n) y
+
+Now using new database user account create database for your service:
+
+.. code:: sh
+
+   # createdb -U tigase tigasedb
+   CREATE DATABASE
+
+Now you can load the database schema:
+
+.. code:: sh
+
+   # psql -U tigase -d tigasedb -f postgresql-schema.sql
+
+Now the database is ready for Tigase server to use.
+
+Server Configuration
+'''''''''''''''''''''
+
+Server configuration is almost identical to MySQL database setup. The only difference is the connection string which usually looks like:
+
+.. code:: dsl
+
+   dataSource {
+       default () {
+           uri = 'postgresql://localhost/tigasdb?user=tigase'
+       }
+   }
+
+2.8.10. Schema Updates
+^^^^^^^^^^^^^^^^^^^^^^
+
+This is a repository for Schema updates in case you have to upgrade from older installations.
+
+-  `Tigase Server Schema v7.1 Updates <#tigaseServer71>`__ Applies to v7.1.0 and v8.0.0
+
+Changes to Schema in v8.0.0
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+For version 8.0.0 of Tigase XMPP Server, we decided to improve authentication and security that was provided. In order to do this, implementation of repository and database schemas needed to be changed to achieve this goal. This document, as well one in the HTTP API, will describe the changes to the schemas in this new version.
+
+Reasons
+''''''''
+
+Before version 8.0.0, user passwords were stored in plaintext in ``user_pw`` database field within ``tig_users`` table, but in plaintext. It was possible to enable storage of the MD5 hash of the password instead, however this limited authentication mechanism SASL PLAIN only. However an MD5 hash of a password is not really a secure method as it is possible to revert this mechanism using rainbow tables.
+
+Therefore, we decided to change this and store only encrypted versions of a password in ``PBKDF2`` form which can be easily used for ``SCRAM-SHA-1`` authentication mechanism or ``SCRAM-SHA-256``. SASL PLAIN mechanism can also used these encrypted passwords. The storage of encrypted passwords is now enabled **by default** in v8.0.0 of Tigase.
+
+Summary of changes
+'''''''''''''''''''
+
+Added support for storage of encrypted password
+
+Passwords are no longer stored in plaintext on any database.
+
+Using same salt for any subsequent authentications
+
+This allows clients to reuse calculated credentials and keep them instead of storing plaintext passwords.
+
+Disabled usage of stored procedure for authentication
+
+In previous versions, Tigase used stored procedures ``TigUserLoginPlainPw`` and ``TigUserLogin`` for SASL PLAIN authentication. From version 8.0.0, those procedures are no longer used, but they are updated to use passwords stored in ``tig_user_credentials`` table.
+
+It is still possible to use this procedures for authentication, but to do that you need add:
+
+.. code:: tdsl
+
+   'user-login-query' = '{ call TigUserLoginPlainPw(?, ?) }'
+
+to configuration block of **every** authentication repository.
+
+To enable this for default repository, the ``authRepository`` configuration block will look like this:
+
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           'user-login-query' = '{ call TigUserLoginPlainPw(?, ?) }'
+       }
+   }
+
+
+Deprecated API
+
+Some methods of ``AuthRepository`` API were deprecated and should not be used. Most of them were used for authentication using stored procedures, retrieval of password in plaintext or for password change.
+
+For most of these methods, new versions based on ``tig_user_credentials`` table and user credentials storage are provided where possible.
+
+Deprecated storage procedures
+
+Stored procedures for authentication and password manipulation were updated to a new form, so that will be possible to use them by older versions of Tigase XMPP Server during rolling updates of a cluster. However, these procedures will not be used any more and will be depreciated and removed in future versions of Tigase XMPP Server.
+
+Usage of MD5 hashes of passwords
+
+If you have changed ``password-encoding`` database property in previous versions of Tigase XMPP Server, then you will need to modify your configuration to keep it working. If you wish only to allow access using old passwords and to store changed passwords in the new form, then you need to enable credentials decoder for the correct authentication repository. In this example we will provided changes required for ``MD5-PASSWORD`` value of ``password-encoding`` database property. If you have used a different one, then just replace ``MD5-PASSWORD`` with ``MD5-USERNAME-PASSWORD`` or ``MD5-USERID-PASSWORD``.
+
+**Usage of MD5 decoder.**
+
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialDecoders () {
+               'MD5-PASSWORD' () {}
+           }
+       }
+   }
+
+If you wish to store passwords in MD5 form then use following entries in your configuration file:
+
+**Usage of MD5 encoder.**
+
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialEncoders () {
+               'MD5-PASSWORD' () {}
+           }
+       }
+   }
+
+
+Enabling and disabling credentials encoders/decoders
+
+You may enable which encoders and decoders used on your installation. By enabling encoders/decoders you are deciding in what form the password is stored in the database. Those changes may impact which SASL mechanisms may be allowed to use on your installation.
+
+**Enabling PLAIN decoder.**
+
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialDecoders () {
+               'PLAIN' () {}
+           }
+       }
+   }
+
+**Disabling SCRAM-SHA-1 encoder.**
+
+.. code:: tdsl
+
+   authRepository () {
+       default () {
+           credentialEncoders () {
+               'SCRAM-SHA-1' (active: false) {}
+               'SCRAM-SHA-256' (active: false) {}
+           }
+       }
+   }
+
+.. Warning::
+
+    It is strongly recommended not to disable encoders if you have enabled decoder of the same type as it may lead to the authentication issues, if client tries to use a mechanism which that is not available.
+
+Schema changes
+
+This change resulted in a creation of the new table ``tig_user_credentials`` with following fields:
+
+**uid**
+   id of a user row in ``tig_users``.
+
+**username**
+   username used for authentication (if ``authzid`` is not provided or ``authzid`` localpart is equal to ``authcid`` then row with ``default`` value will be used).
+
+**mechanism**
+   name of mechanism for which this credentials will be used, ie. ``SCRAM-SHA-1`` or ``PLAIN``.
+
+**value**
+   serialized value required for mechanism to confirm that credentials match.
+
+.. Warning::
+
+    During execution of ``upgrade-schema`` task, passwords will be removed from ``tig_users`` table from ``user_pw`` field and moved to ``tig_user_credentials`` table.
+
+Added password reset mechanism
+
+As a part of Tigase HTTP API component and Tigase Extras, we developed a mechanism which allows user to reset their password. To use this mechanism HTTP API component and its REST module **must** to be enabled on Tigase XMPP Server installation.
+
+.. Note::
+
+   Additionally this mechanism need to be enabled in the configuration file. For more information about configuration of this mechanism please check Tigase HTTP API component documentation.
+
+Assuming that HTTP API component is configured to run on port 8080 *(default)*, then after accessing address http://localhost:8080/rest/user/resetPassword in the web browser it will present a web form. By filling and submitting this form, the user will initiate a password reset process. During this process, Tigase XMPP Server will send an email to the user’s email address (provided during registration) with a link to the password change form.
+
+
+Upgrading from v7.1.x
+~~~~~~~~~~~~~~~~~~~~~~
+
+When upgrading from previous versions of Tigase, it is recommended that you first backup the database. Refer to the documentation of your database software to find out how to export a copy. Once the backup is made, it will be time to run the schema upgrade. Be sure that your schema is up to date, and should be v7.1.0 Schema.
+
+To upgrade, use the new ``upgrade-schema`` task of SchemaManager:
+
+-  In linux
+
+   .. code:: bash
+
+      ./scripts/tigase.sh install-schema etc/tigase.conf
+
+-  In Windows
+
+   .. code:: bash
+
+      java -cp "jars/*" tigase.db.util.SchemaManager "install-schema"
+
+You will need to configure the following switches:
+
+-  | ``-T`` Specifies Database Type
+   | Possible values are: ``mysql``, ``derby``, ``sqlserver``, ``postgresql``, ``mongodb``
+
+-  | ``-D`` Specifies Databse Name
+   | The explicit name of the database you wish to upgrade.
+
+-  | ``-H`` Specifies Host address
+   | By default, this is localhost, but may be set to IP address or FQDNS address.
+
+-  | ``-U`` Specifies Username
+   | This is the username that is authorized to make changes to the database defined in -D.
+
+-  | ``-P`` Specifies Password
+   | The password for username specified in -U.
+
+-  ``-R`` Password for Administrator or Root DB account.
+
+-  ``-A`` Password for Administrator or Root DB account.
+
+-  ``-J`` Jid of user authorized as admin user from Tigase.
+
+-  ``-N`` Password for user specified in -J.
+
+-  | ``-F`` Points to the file that will perform the upgrade.
+   | Will follow this form database/{dbname}-server-schema-8.0.0.sql
+
+Tigase Server Schema v7.2 Updates
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+**FOR ALL USERS UPGRADING TO v8.0.0 FROM A v7.0.2 INSTALLATION**
+''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''''
+
+| The schema has changed for the main database, and the pubsub repository. In order to upgrade to the new schemas, you will need to do the following:
+
+1. Upgrade the Main database schema to v7.1 using the ``database/${DB_TYPE}-schema-upgrade-to-7-1.sql`` file
+
+2. Upgrade the Pubsub Schema to v3.1.0 using the ``database/${DB_TYPE}-pubsub-schema-3.1.0.sql`` file
+
+3. Upgrade the Pubsub Schema to v3.2.0 using the ``database/${DB_TYPE}-pubsub-schema-3.2.0.sql`` file
+
+4. Upgrade the Pubsub Schema to v3.3.0 using the ``database/${DB_TYPE}-pubsub-schema-3.3.0.sql`` file
+
+All three commands may be done at the same time in that order, it is suggested you make a backup of your current database to prevent data loss.
+
+
+Tigase Schema Change for v7.1
+''''''''''''''''''''''''''''''
+
+Tigase has made changes to its database to include primary keys in the tig_pairs table to improve performance of the Tigase server. This is an auto-incremented column for Primary Key items appended to the previous schema.
+
+.. Warning::
+
+    You MUST update your database to be compliant with the new schema. If you do not, Tigase will not function properly.**
+
+.. Note::
+
+   *This change will affect all users of Tigase using v7.1.0 and newer.*
+
+If you are installing a new version of v8.0.0 on a new database, the schema should automatically be installed.
+
+First, shut down any running instances of Tigase to prevent conflicts with database editing. Then from command line use the DBSchemaLoader class to run the -schema-upgrade-to-7.1.sql file to the database. The command is as follows:
+
+In a linux environment
+
+.. code:: bash
+
+   java -cp "jars/*" tigase.db.util.DBSchemaLoader -dbHostname ${HOSTNAME} -dbType ${DB_TYPE} -rootUser ${ROOT_USER} -dbPass ${DB_USER_PASS} -dbName ${DB_NAME} -schemaVersion ${DB_VERSION} -rootPass ${ROOT_USER_PASS} -dbUser ${DB_USER}  -adminJID "${ADMIN_JID}" -adminJIDpass ${ADMIN_JID_PASS}  -logLevel ALL -file database/${DB_TYPE}-schema-upgrade-to-7-1.sql
+
+In a windows environment
+
+.. code:: bash
+
+   java -cp jars/* tigase.db.util.DBSchemaLoader -dbHostname ${HOSTNAME} -dbType ${DB_TYPE} -rootUser ${ROOT_USER} -dbPass ${DB_USER_PASS} -dbName ${DB_NAME} -schemaVersion ${DB_VERSION} -rootPass ${ROOT_USER_PASS} -dbUser ${DB_USER}  -adminJID "${ADMIN_JID}" -adminJIDpass ${ADMIN_JID_PASS}  -logLevel ALL -file database/${DB_TYPE}-schema-upgrade-to-7-1.sql
+
+All variables will be required, they are as follows:
+
+-  ``${HOSTNAME}`` - Hostname of the database you wish to upgrade.
+
+-  ``${DB_TYPE}`` - Type of database [derby, mysql, postgresql, sqlserver].
+
+-  ``${ROOT_USER}`` - Username of root user.
+
+-  ``${ROOT_USER_PASS}`` - Password of specified root user.
+
+-  ``${DB_USER}`` - Login of user that can edit database.
+
+-  ``${DB_USER_PASS}`` - Password of the specified user.
+
+-  ``${DB_NAME}`` - Name of the database to be edited.
+
+-  ``${DB_VERSION}`` - In this case, we want this to be 7.1.
+
+-  ``${ADMIN_JID}`` - Bare JID of a database user with admin privileges. Must be contained within quotation marks.
+
+-  ``${ADMIN_JID_PASS}`` - Password of associated admin JID.
+
+Please note that the SQL file for the update will have an associated database with the filename. i.e. postgresql-update-to-7.1.sql for postgresql database.
+
+A finalized command will look something like this:
+
+.. code:: bash
+
+   java -cp "jars/*" tigase.db.util.DBSchemaLoader -dbHostname localhost -dbType mysql -rootUser root -rootPass root -dbUser admin -dbPass admin -schemaVersion 7.1 -dbName Tigasedb -adminJID "admin@local.com" -adminJIDPass adminpass -logLevel ALL -file database/mysql-schema-upgrade-to-7.1.sql
+
+Once this has successfully executed, you may restart you server. Watch logs for any db errors that may indicate an incomplete schema upgrade.
+
+Changes to Pubsub Schema
+'''''''''''''''''''''''''
+
+Tigase has had a change to the PubSub Schema, to upgrade to PubSub Schema v7.1 without having to reform your databases, use this guide to update your databases to be compatible with the new version of Tigase.
+
+.. Note::
+
+   Current PubSub Schema is v3.3.0, you will need to repeat these instructions for v3.1.0, v3.2.0 and then v3.3.0 before you run Tigase V7.1.0.
+
+The PubSub Schema has been streamlined for better resource use, this change affects all users of Tigase. To prepare your database for the new schema, first be sure to create a backup! Then apply the appropriate PubSub schema to your MySQL and it will add the new storage procedure.
+
+All these files should be in your /database folder within Tigase, however if you are missing the appropriate files, use the links below and place them into that folder.
+
+The MySQL schema can be found `Here <https://github.com/tigase/tigase-pubsub/blob/master/src/main/database/mysql-pubsub-4.1.0.sql>`__.
+
+The Derby schema can be found `Here <https://github.com/tigase/tigase-pubsub/blob/master/src/main/database/derby-pubsub-4.1.0.sql>`__.
+
+The PostGRESQL schema can be found `Here <https://github.com/tigase/tigase-pubsub/blob/master/src/main/database/postgresql-pubsub-4.1.0.sql>`__.
+
+The same files are also included in all distributions of v8.0.0 in [tigaseroot]/database/ . All changes to database schema are meant to be backward compatible.
+
+You can use a utility in Tigase to update the schema using the following command from the Tigase root:
+
+-  Linux
+
+   .. code:: bash
+
+      java -cp "jars/*" tigase.db.util.DBSchemaLoader
+
+-  Windows:
+
+   ::
+
+      java -cp jars/* tigase.db.util.DBSchemaLoader
+
+.. Note::
+
+   **Some variation may be necessary depending on how your java build uses ``-cp`` option**
+
+Use the following options to customize. Options in bold are required.:
+
+-  ``-dbType`` database_type {derby, mysql, postgresql, sqlserver} (*required*)
+
+-  ``-schemaVersion`` schema version {4, 5, 5-1}
+
+-  ``-dbName`` database name (*required*)
+
+-  ``-dbHostname`` database hostname (default is localhost)
+
+-  ``-dbUser`` tigase username
+
+-  ``-dbPass`` tigase user password
+
+-  ``-rootUser`` database root username (*required*)
+
+-  ``-rootPass`` database root password (*required*)
+
+-  ``-file path`` to sql schema file (*required*)
+
+-  ``-query`` sql query to execute
+
+-  ``-logLevel`` java logger Level
+
+-  ``-adminJID`` comma separated list of admin JIDs
+
+-  ``-adminJIDpass`` password (one for all entered JIDs
+
+.. Note::
+
+   Arguments take following precedent: query, file, whole schema
+
+As a result your final command should look something like this:
+
+::
+
+   java -cp "jars/*" tigase.db.util.DBSchemaLoader -dbType mysql -dbName tigasedb -dbUser root -dbPass password -file database/mysql-pubsub-schema-3.1.0.sql
+
+2.9. Components
+----------------
+The only step is to tell the server what components to load, how to name them and optionally give some extra parameters. To do so open the ``config.tdsl`` file you use in your installation.
+
+Let’s say you want to just add PubSub for now. All you need to do is add the following to the properties file:
+
+.. code:: dsl
+
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+
+Normally, this is not necessary since pubsub is loaded by default, however this is just an example of loading a class with the DSL format.
+
+.. code:: dsl
+
+   'pubsub-priv' (class: tigase.pubsub.PubSubComponent) {}
+
+As you can see, we can customize the name of a component in the deceleration, here we are using pubsub-priv.
+
+Although this may be rare, it allows for wide compatibility and platform stability.
+
+Normally, however we want to load few different components like PubSub, MUC, MSN Transport and so on…​. Therefore instead of the above second PubSub we can load the MUC component:
+
+.. code:: dsl
+
+   muc (class: tigase.muc.MUCComponent) {}
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+
+Changes to the ``config.tdsl`` file will take effect upon server restart.
+
+2.9.1. Advanced Message Processing - AMP XEP-0079
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase server offers support for `XEP-0079: Advanced Message Processing <http://xmpp.org/extensions/xep-0079.html>`__ (often abbreviated to AMP).
+
+It is enabled by default but there are several configuration options that you may tweak.
+
+Configuration of AMP is not very complex, but as it is implemented as a component in the Tigase server it does needs a few settings to get it right.
+
+Here is a first, brief overview of the AMP configuration and later detailed explanation of each parameter.
+
+.. code:: dsl
+
+   'sess-man' {
+       amp () {
+           'amp-jid' = 'amp@your-domain.tld'
+       }
+       message (active: false) {}
+       msgoffline (active: false) {}
+   }
+   'amp-security-level' = 'STRICT'
+
+First of all: plugins
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Even though the whole functionality is implemented inside the component you need a way to forward messages with ``AMP`` payload to that component. This is what the ``amp`` plugin does. The ``amp`` plugin intercepts all ``<message/>`` packets even without AMP payload, redirecting some of the to the ``AMP`` component and others processing in a standard way. Therefore you no longer need ``message`` plugin or ``msgoffline`` plugin. Those are all functions are offered by the ``amp`` plugin now. Hence you have to switch ``message`` and ``msgoffline`` plugins off (the ``amp`` plugin is loaded by default):
+
+.. code:: dsl
+
+   'sess-man' {
+       amp () {}
+       message (active: false) {}
+       msgoffline (active: false) {}
+   }
+
+The ``amp`` plugin needs to know where to forward all the ``AMP`` packets. By default plugin uses hostname of the given machine as this is true to the most installations. However, this is configured by the last line of the example configuration, which forwards all packets to the address ``amp@your-domain.tld``:
+
+.. code:: dsl
+
+   'sess-man' {
+       amp () {
+           'amp-jid' = 'amp@your-domain.tld'
+       }
+   }
+
+Secondly: component
+~~~~~~~~~~~~~~~~~~~~
+
+By default Tigase loads the component with the standard name ``amp``
+
+Optional parameters
+~~~~~~~~~~~~~~~~~~~~
+
+There is also one parameter shared between the component and the plugin. Connection to the database where offline messages are stored. The AMP component has a dedicated schema for storing offline messages designed for a high traffic and high load installations. It does not use ``UserRepository`` for storing messages.
+
+By default the same physical database as for ``UserRepository`` is used but you can change it and store messages in a completely separate location to reduce performance degradation of rest of the system. You can set a database connection string using following property:
+
+.. code:: dsl
+
+   dataSource {
+       'default-amp' () {
+           uri = 'jdbc:mysql://localhost/tigasedb?user=db_usr&password=db_pwd'
+       }
+   }
+
+The `XEP-0079 <http://xmpp.org/extensions/xep-0079.html>`__ specification has a `Section 9. - Security Considerations <http://xmpp.org/extensions/xep-0079.html#security>`__. As it describes, in some cases the AMP protocol can be used to reveal user’s presence information by other users who are not authorized for presence updates. There are a few possible ways to prevent this.
+
+Tigase’s implementation offers 3 modes to handle ``AMP`` requests to prevent revealing user’s status to non-authorized users:
+
+.. code:: dsl
+
+   'amp-security-level' = 'STRICT'
+
+In this mode the server performs strict checking. The ``AMP`` specification is fully handled. This however involves roster loading for each offline user, hence it may impact the service performance. It may not be feasible or possible to run in this mode for services under a high load with lots of AMP messages.
+
+In the XEP this mode is described in the following way:
+
+*Accept the relevant condition only if the sender is authorized to receive the receiver’s presence, as a result of which the server MUST reply with a <not-acceptable/> error condition if the sender is not so authorized; this is the RECOMMENDED behavior. This is also the default in Tigase.*
+
+.. code:: dsl
+
+   'amp-security-level' = 'PERFORMANCE'
+
+Dummy checking is performed efficiently by just returning an error response every time there is a chance that the default action may reveal user status without looking into the user’s roster. This does not affect performance but it does impact the ``AMP`` compliance.
+
+In the XEP this mode is described in the following way:
+
+*Accept the relevant condition only if the action is "drop", as a result of which the server MUST reply with a <not-acceptable/> error condition if the action is "alert", "error", or "notify"; this is slightly less restrictive but still unnecessarily restricts the functionality of the system, so is NOT RECOMMENDED.*
+
+It does not do any checking. It acts like all users are authorized to receive notifications, even if it may reveal user status to unauthorized users. It does not impact the server performance and it offers full AMP compliance.
+
+.. code:: dsl
+
+   'amp-security-level' = 'NONE'
+
+2.9.2. Server Monitoring
+^^^^^^^^^^^^^^^^^^^^^^^^
+
+All the documentation and resources related to the Tigase server monitoring.
+
+-  `Setting up Remote Monitoring in the Server <#setupRemoteMonitoring>`__
+
+-  `Statistics Logger Configuration <#statLoggerConfig>`__
+
+-  `Retrieving Statistics from the Server <#retrievingStatisticsFromTheServer>`__
+
+-  `Monitor Component <#monitorComponent>`__
+
+Setting Up Remote Monitoring in the Server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tigase server can be remotely monitored over following protocols: ``JMX/RMI``, ``SNMP`` and ``HTTP``. Even though ``JMX`` offers the biggest control and visibility to the server states, all of the monitoring services give the same basic set of the server statistics:
+
+-  Number of network connections for s2s, c2s and Bosh
+
+-  Last second, last minute and last hour load for all main components: SM, MR, c2s, s2s, Bosh, MUC and PubSub
+
+-  System statistics - memory usage (heap and non heap) and the server uptime in milliseconds and human readable text.
+
+-  Users statistics - number of registered users and number of online user session.
+
+JMX/RMI and SNMP servers offer basic security and can restrict access while the HTTP server doesn’t offer any access restriction mechanisms. Therefore HTTP monitoring is recommended to operate behind a firewall.
+
+The monitoring itself causes very low overhead in terms of the resources and CPU consumption on top of the normal Tigase processing requirements so it can be left on without worrying about performance degradation.
+
+NOTE This works with the Tigase server from version **4.2.0** or build **1418**.
+
+What You Need
+'''''''''''''
+
+Statistics binaries are built-in ``-dist-max`` and no extra files are needed. If you have downloaded ``-dist`` file, you will need tigase-extras[https://github.com/tigase/tigase-extras] built and included in the ``jars/`` directory.
+
+Activation
+''''''''''
+
+You can either run the Tigase installer and use the configuration wizard to activate the monitoring or edit etc/config.tdsl file and add following lines:
+
+.. code:: dsl
+
+   monitoring() {
+     jmx() {
+       port = 9050
+     }
+     http() {
+       port = 9080
+     }
+     snmp() {
+       port = 9060
+     }
+   }
+
+As you see there is a separate block for each monitoring server you want to activate. Each server is responsible for activation of a different protocol and takes a single parameter - port number. There are following protocols supported right now:
+
+-  ``jmx`` - activating monitoring via JMX/RMI
+
+-  ``http`` - activating monitoring over HTTP protocol
+
+-  ``snmp`` - activating monitoring over SNMP protocol
+
+You can have all protocols active at the same time or any combination of them or none.
+
+Security
+''''''''
+
+Both JMX and SNMP offer security protection to limit access to monitoring data. The security configuration is a bit different for both.
+
+JMX
+'''
+
+After the server installation or in the SVN repository you can find 2 files in the ``etc/`` directory: ``jmx.access`` and ``jmx.password``.
+
+-  ``jmx.access`` is a user permission file. You can use it to specify whether the user can access the monitoring data for reading only ``readonly`` or with read-write ``readwrite`` access. There are example entries in the file already and the content may simply look like:
+
+   .. code:: bash
+
+      monitor readonly
+      admin readwrite
+
+-  ``jmx.password`` is a user password file. You can set user passwords here and the format again is very simple and the same as for jmx.access. There are example entries already provided for you convenience. Content of the file may look like the example below:
+
+   .. code:: bash
+
+      admin admin_pass
+      monitor monitor_pass
+
+Using above to files you can control who and how can access the JMX monitoring services.
+
+SNMP
+
+Access to SNMP monitoring is controlled using ACL (access control lists) which can be configured in the file ``snmp.acl`` located in ``etc/`` directory. It contains lots of detailed instructions how to setup ACL and restrict access per user, host and what kind access is allowed. The simplest possible configuration may look like this:
+
+.. code:: bash
+
+   acl = {
+     {
+       communities = public, private
+       access = read-only
+       managers = public.host.com, private.host.com
+     }
+     {
+       communities = admin
+       access = read-write
+       managers = localhost, admin.host.com
+     }
+   }
+
+You might also need Tigase MIB definition: `TIGASE-MANAGEMENT-MIB.mib <https://github.com/tigase/tigase-server/blob/master/src/main/resources/mib/JVM-MANAGEMENT-MIB.mib>`__ for the server specific statistics. The MIB contains definition for all the server statistics exposed via SNMP.
+
+HTTP
+
+Access the server at example.com:9080 and you will be presented with an Agent View.
+
+Retrieving statistics from the server
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+By default we can retrieve server statistics using XMPP, no additional setup is necessary.
+
+Retrieving statistics using XMPP
+'''''''''''''''''''''''''''''''''
+
+Accessing statistics over XMPP protocol requires any XMPP client capable of executing `XEP-0050: Ad-Hoc Commands <http://xmpp.org/extensions/xep-0050.html>`__. It’s essential to remember, that only administrator (a user whose JID is configured as administrative) can access the statistics.
+
+Psi XMPP Client
+''''''''''''''''
+
+For the purpose of this guide `Psi <http://psi-im.org/>`__ client will be used. After successfully configuring and connecting to account with administrative privileges we need to access *Service Discovery*, either from application menu or from context menu of the particular account account:
+
+|roster-discovery|
+
+In the *Service Discovery* window we need to find *Server Statistics* component:
+
+|discovery-stats|
+
+We can either access statistics for all components or select particular component after expanding the tree. To execute ad-hoc command simply double click on the particular node which will open window with statistics:
+
+|server-stats|
+
+In this window, in addition to see the statistics, we can adjust *Stats level* by selecting desired level from the list and confirm by clicking *Finish*.
+
+Retrieving statistics using JMX
+''''''''''''''''''''''''''''''''
+
+In order to access statistics over JMX we need to enable support for it in Tigase - `Monitoring Activation <#monitoring_activation>`__. Afterwards we can use a number of tools to get to the statistics, for example the following:
+
+JConsole
+'''''''''
+
+After opening JConsole we either select local process or provide details of the remote process, including IP, port and credentials from **etc/jmx.**\ \* files:
+
+|jconsole|
+
+Afterwards we navigate to the MBeans tab from where we can access the ``tigase.stats`` MBean. It offers similar options to XMPP - either accessing statistics for all components or only for particular component as well as adjusting level for which we want to obtain statistics:
+
+|jconsole-1|
+
+
+StatsDumper.groovy
+'''''''''''''''''''
+
+In order to collect statistics over period of time following groovy script can be used: `StatsDumper.groovy <files/StatsDumper.groovy>`__. It’s a Simple JMX client that connects to Tigase and periodically saves all statistics to files.
+
+It takes following parameters:
+
+.. code:: bash
+
+   $ groovy StatsDumper.groovy [hostname] [username] [password] [dir] [port] [delay(ms)] [interval(ms)] [loadhistory(bool)]
+
+-  ``hostname`` - address of the instance
+
+-  ``username`` - JMX username
+
+-  ``password`` - JMX username
+
+-  ``dir`` - directory to which save the files with statistics
+
+-  ``port`` - port on which to make the connection
+
+-  ``delay``\ (ms) - initial delay in milliseconds after which statistics should be saved
+
+-  ``interval``\ (ms) - interval between each retrieval/saving of statistics
+
+-  ``loadhistory``\ (bool) - indicates whether or not load statistics history from server (if such is enabled in Tigase)
+
+.. |roster-discovery| image:: images/admin/monitoring_xmpp_1.png
+.. |discovery-stats| image:: images/admin/monitoring_xmpp_2.png
+.. |server-stats| image:: images/admin/monitoring_xmpp_3.png
+.. |jconsole| image:: images/admin/monitoring_jmx_jconsole_1.png
+.. |jconsole-1| image:: images/admin/monitoring_jmx_jconsole_2.png
+
+Monitor Component
+~~~~~~~~~~~~~~~~~
+
+Tigase includes an **Monitor Component** to help with monitoring has been implemented. This allows you to set thresholds for certain predefined tasks and you or other JIDs can be sent a message when those thresholds are passed. You can even configure a mailer extension to have an E-mail sent to system administrators to let them know an event has occurred! Lets begin with setup and requirements.
+
+Monitor Component is based on eventbus which in turn is based on a limited `PubSub <http://www.xmpp.org/extensions/xep-0060.html>`__ specification. Events are delivered to subscribers as a normal PubSub notification.
+
+Each component or client may subscribe for specific types of events. Only components on cluster nodes are allowed to publish events.
+
+Setup
+'''''
+
+Monitor Component is enabled by default on v7.1.0 b4001 and later, so no setup needed!
+
+How it Works
+''''''''''''
+
+Events in Eventbus are identified by two elements: name of event and its namespace:
+
+.. code:: xml
+
+   <EventName xmlns="tigase:demo">
+     <sample_value>1</sample_value>
+   </EventName>
+
+Where event name is ``EventName`` and namespace is ``tigase:demo``.
+
+Listeners may subscribe for a specific event or for all events with specific a namespace. Because in pubsub, only one node name exists, so we have to add a way to convert the event name and namespace to a node name:
+
+::
+
+   nodename = eventname + "|" + namespace
+
+So for example, to subscribe to ``<EventName xmlns="tigase:demo">``, node must be: ``EventName|tigase:demo``. If you wish to subscribe to all events with a specific namespace, use an asterisk (``*``) instead of the event name: ``*|tigase:demo``.
+
+   **Note**
+
+   If client is subscribed to ``*|tigase:demo node``, then events will not be sent from node ``*|tigase:demo``, but from the **real** node (in this case: ``EventName|tigase:demo``).
+
+Available Tasks
+'''''''''''''''
+
+Monitor Component has several pre-defined tasks that can be monitored and set to trigger. What follows is the list of tasks with the options attributed to each task.
+
+-  | **disk-task** - Used to check disk usage.
+   | Available Options
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``period`` - Period of running check, Integer value.
+
+   3. ``threshold`` - Percentage of used space on disk, Float value.
+
+-  | **cpu-temp-task** - Used to check CPU temperature.
+   | Available Options
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``period`` - Period of running check, Integer value.
+
+   3. ``cpuTempThreshold`` - Temperature threshold of CPU in °C.
+
+-  | **load-checker-task** - Used to check system load.
+   | Available Options
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``period`` - Period of running check, Integer value.
+
+   3. ``averageLoadThreshold`` - Average percent load threshold, Long value.
+
+-  | **memory-checker-task** - Used to check memory usage.
+   | Available Options
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``period`` - Period of running check, Integer value.
+
+   3. ``maxHeapMemUsagePercentThreshold`` - Alarm when percent of used Heap memory is larger than, Integer value.
+
+   4. ``maxNonHeapMemUsagePercentThreshold`` - Alarm when percent of used Non Heap memory is larger than, Integer value.
+
+-  | **logger-task** - Used to transmit log entries depending on level entered.
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``levelThreshold`` - Minimal log level that will be the threshold. Possible values are SEVERE, WARNING, INFO, CONFIG, FINE, FINER, FINEST, and ALL.
+
+-  | **connections-task** - Used to check users disconnections.
+   | **NOTE: The event will be generated only if both thresholds (amount and percentage) will be fulfilled.**
+
+   1. ``enabled`` - Enable or disable task, Boolean value.
+
+   2. ``period`` - Period of running check in ms, Integer value.
+
+   3. ``thresholdMinimal`` - Minimal amount of disconnected users required to generate alarm.
+
+   4. ``threshold`` - Minimal percent of disconnected users required to generate alarm.
+
+
+Configuration
+''''''''''''''
+
+Configuration of the monitor can be done one of two ways; either by lines in ``config.tdsl`` file, or by sending XMPP stanzas to the server. You may also send XMPP stanzas VIA HTTP REST. XMPP stanza configurations will override ones in config.tdsl, but they will only last until the server restarts.
+
+config.tdsl
+
+Tasks can be configured in the ``config.tdsl`` file. See `available tasks <#availableTasks>`__ for the tasks that can be setup.
+
+To enable a specific monitor task, use the following line:
+
+.. code:: dsl
+
+   monitor {
+       '$TASKNAME' {
+           setting = value
+       }
+   }
+
+Where monitor is the component name for ``MonitorComponent``, and ``$TASKNAME`` is one of the `available task names <#availableTasks>`__.
+
+This format will be the same for other settings for tasks, and it’s best to group settings under one heading. For example:
+
+.. code:: dsl
+
+   monitor {
+       'connections-task' {
+           enabled = true
+           period = 1000
+       }
+   }
+
+sets the check period to 1000 milliseconds and enables ``connections-task``.
+
+.. Note::
+
+   Once triggers have been activated, they will become dormant. Think of these as one-shot settings.
+
+
+Subscription Limitations
+
+To define list of JIDs allowed to subscribe for events:
+
+.. code:: dsl
+
+   eventbus {
+       affiliations {
+           allowedSubscribers = 'francisco@denmark.lit,bernardo@denmark.lit'
+       }
+   }
+
+If this is not specified, all users can subscribe.
+
+Configuration via XMPP
+
+We can also configure the eventbus monitor component using XMPP stanzas. This allows us to set and change configurations during server runtime. This is done using a series of ``iq`` stanzas send to the monitor component.
+
+We can query each component for its current settings using the following stanza.
+
+.. code:: xml
+
+   <iq type="set" to="monitor@$DOMAIN/disk-task" id="aad0a">
+       <command xmlns="http://jabber.org/protocol/commands" node="x-config"/>
+   </iq>
+
+The server will return the component current settings which will make things easier if you wish to edit them. In this case, the server has returned the following to us
+
+.. code:: xml
+
+   <iq from="monitor@$DOMAIN/disk-task" type="result" id="aad0a" to="alice@coffeebean.local/Psi+">
+       <command xmlns="http://jabber.org/protocol/commands" status="executing" node="x-config"
+                sessionid="0dad3436-a029-4082-b0e0-04d838c6c0da">
+           <x xmlns="jabber:x:data" type="">
+               <title>Task Configuration</title>
+               <instructions/>
+               <field type="boolean" label="Enabled" var="x-task#enabled">
+                   <value>0</value>
+               </field>
+               <field type="text-single" label="Period [ms]" var="x-task#period">
+                   <value>60000</value>
+               </field>
+               <field type="text-single" label="Disk usage ratio threshold" var="threshold">
+                   <value>0.8</value>
+               </field>
+           </x>
+       </command>
+   </iq>
+
+This tells us that the disk-task setting is not active, has a period of 60000ms, and will trigger when disk usage is over 80%.
+
+To send new settings to the monitor component, we can send a similar stanza back to the monitor component.
+
+.. code:: xml
+
+   <iq type="set" to="monitor@$DOMAIN/disk-task" id="aad1a">
+       <command xmlns="http://jabber.org/protocol/commands" node="x-config"
+                sessionid="0dad3436-a029-4082-b0e0-04d838c6c0da">
+           <x xmlns="jabber:x:data" type="submit">
+               <field type="boolean" var="x-task#enabled">
+                   <value>0</value>
+               </field>
+               <field type="text-single" var="x-task#period">
+                   <value>60000</value>
+               </field>
+               <field type="text-single" var="threshold">
+                   <value>0.8</value>
+               </field>
+           </x>
+       </command>
+   </iq>
+
+To which a successful update will give you an XMPP success stanza to let you know everything is set correctly.
+
+Alternatively, you can update specific settings by editing a single field without adding anything else. For example, if we just wanted to turn the disk-task on we could send the following stanza:
+
+.. code:: xml
+
+   <iq type="set" to="monitor@$HOSTNAME/disk-task" id="ab53a">
+       <command xmlns="http://jabber.org/protocol/commands" node="x-config">
+           <x xmlns="jabber:x:data" type="submit">
+               <field type="boolean" var="x-task#enabled">
+                   <value>1</value>
+               </field>
+           </x>
+       </command>
+   </iq>
+
+To set any other values, do not forget that certain parts may need to be changed, specifically the ``<field type="boolean" var=x-task#enabled">`` fields:
+
+-  | Your field type will be defined by the type of variable specified in the `Available Tasks <#availableTasks>`__ section.
+
+-  ``var=x task#`` will be followed by the property value taken directly from the `Available Tasks <#availableTasks>`__ section.
+
+Getting the Message
+''''''''''''''''''''
+
+Without a place to send messages to, monitor will just trigger and shut down. There are two different methods that monitor can deliver alarm messages and relevant data; XMPP messages and using the mailer extension.
+
+XMPP notification
+
+| In order to retrieve notifications, a subscription to the ``eventbus@<VHost>`` user must be made. Keep in mind that subscriptions are not persistent across server restarts, or triggers.
+| The monitor schema is very similar to most XMPP subscription requests but with a few tweaks to differentiate it if you wanted to subscribe to a certain task or all of them. Each task is considered a node, and each node has the following pattern: ``eventName|eventXMLNS``. Since each monitoring task has the ``tigase:monitor:event`` event XMLNS, we just need to pick the event name from the list of tasks. So like the above example, our event node for the disk task will be ``disk-task|tigase:monitor:event``. Applied to an XMPP stanza, it will look something like this:
+
+.. code:: xml
+
+   <iq type='set'
+       to='eventbus@<VHost>'
+       id='sub1'>
+     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+       <subscribe node='disk-taskEvent|tigase:monitor:event' jid='$USER_JID'/>
+     </pubsub>
+   </iq>
+
+Don’t forget to replace ``$USER_JID`` with the bare JID of the user you want to receive those messages. You can even have them sent to a MUC or any component with a JID.
+
+Available events are as follows:
+
+-  DiskUsageMonitorEvent for ``disk-task``
+
+-  LoggerMonitorEvent for ``logger-task``
+
+-  HeapMemoryMonitorEvent for ``memory-checker-task``
+
+-  LoadAverageMonitorEvent for ``load-checker-task``
+
+-  CPUTempMonitorEvent for ``cpu-temp-task``
+
+-  UsersDisconnected for ``connections-task``
+
+Alternatively, you can also subscribe to all events within the eventbus by using a wildcard \* in place of the event XMLNS like this example:
+
+.. code:: xml
+
+   <iq type='set'
+       to='eventbus@<VHost>'
+       id='sub1'>
+     <pubsub xmlns='http://jabber.org/protocol/pubsub'>
+       <subscribe node='*|tigase:monitor:event' jid='$USER_JID'/>
+     </pubsub>
+   </iq>
+
+Sample notification from Monitor
+
+.. code:: xml
+
+   <message from='eventbus.shakespeare.lit' to='francisco@denmark.lit' id='foo'>
+     <event xmlns='http://jabber.org/protocol/pubsub#event'>
+       <items node='EventName|tigase:demo'>
+         <item>
+           <EventName xmlns="tigase:demo" eventSource="samplecomponent.shakespeare.lit'" eventTimestamp="1444216850">
+             <sample_value>1</sample_value>
+           </EventName>
+         </item>
+       </items>
+     </event>
+   </message>
+
+Mailer Extension
+'''''''''''''''''
+
+*Tigase Server Monitor Mailer Extension* (TSMME) can send messages from the monitor component to a specified E-mail address so system administrators who are not logged into the XMPP server.
+
+For v7.1.0 versions and later, TSMME is already included in your distribution package and no extra installation is needed.
+
+Configuration
+
+Tigase Mailer Extension may be configured via the ``config.tdsl`` file in the following manner:
+
+.. code:: dsl
+
+   monitor {
+       'mailer-from-address' = 'sender@<VHost>'
+       'mailer-smtp-host' = 'mail.tigase.org'
+       'mailer-smtp-password' = '********'
+       'mailer-smtp-port' = '587'
+       'mailer-smtp-username' = 'sender'
+       'mailer-to-addresses' = 'receiver@<VHost>,admin@<VHost>'
+   }
+
+Here is an explanation of those variables.
+
+-  ``mailer-smtp-host`` - SMTP Server hostname.
+
+-  ``mailer-smtp-port`` - SMTP Server port.
+
+-  ``mailer-smtp-usernam`` - name of sender account.
+
+-  ``mailer-smtp-password`` - password of sender account.
+
+-  ``mailer-from-address`` - sender email address. It will be set in field from in email.
+
+-  ``mailer-to-addresses`` - comma separated notification receivers email addresses.
+
+It is recommended to create a specific e-mail address in your mail server for this purpose only, as the account settings are stored in plaintext without encryption.
+
+Configuration of statistics loggers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+It is possible to enable and configure automatic storage of statistics information. To do that you need to configure any of following statistics loggers as a ``StatisticsCollector`` component sub-beans:
+
+``tigase.stats.CounterDataArchivizer``
+   every execution put current basic server metrics (CPU usage, memory usage, number of user connections, uptime) into database (overwrites previous entry).
+
+``tigase.stats.CounterDataLogger``
+   every execution insert new row with new set of number of server statistics (CPU usage, memory usage, number of user connections per connector, number of processed packets of different types, uptime, etc) into the database.
+
+``tigase.stats.CounterDataFileLogger``
+   every execution store all server statistics into separate file.
+
+As an example to configure ``tigase.stats.CounterDataFileLogger`` to archive statistics data with level ``FINE`` every 60 seconds to file prefixed with ``stat`` and located in ``logs/server_statistics`` following entry is needed:
+
+.. code:: dsl
+
+   stats() {
+       'stats-file-logger' (class: tigase.stats.CounterDataFileLogger) {
+           'stats-directory' = 'logs/server_statistics'
+           'stats-filename' = 'stat'
+           'stats-unixtime' = false
+           'stats-datetime' = true
+           'stats-datetime-format' = 'HH:mm:ss'
+           'stats-level' = 'FINEST'
+       }
+   }
+
+2.9.3. Server to Server Protocol Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase server-to-server communication component facilitates communication with other XMPP servers (federation) and allows you to tweak it’s configuration to get a better performance in your installation.
+
+S2S (or server to server) protocol is enabled by default with optimal settings chosen. There are however, a set of configuration parameters you can adjust the server behavior to achieve optimal performance on your installation.
+
+This documents describes following elements of the Tigase server configuration:
+
+1. Number of concurrent connections to external servers
+
+2. The connection throughput parameters
+
+3. Maximum waiting time for packets addressed to external servers and the connection inactivity time
+
+4. Custom plugins selecting connection to the remote server
+
+Number of Concurrent Connections
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Normally only one connection to the remote server is required to send XMPP stanza to that server. In some cases however, under a high load, you can get much better throughput and performance if you open multiple connections to the remote server.
+
+This is especially true when the remote server works in a cluster mode. Ideally you want to open a connection to each of the cluster nodes on the remote server. This way you can spread the traffic evenly among cluster nodes and improve the performance for s2s connections.
+
+Tigase server offers 2 different parameters to tweak the number of concurrent, s2s connections:
+
+-  ``max-out-total-conns`` - this property specifies the maximum outgoing connections the Tigase server opens to any remote XMPP server. This is a **per domain** limit, which means that this limit applies to each of the remote domains Tigase connects to. If it is set to ``4`` then Tigase opens a maximum of 4 connections to ``jabber.org`` plus maximum 4 connections to ``muc.jabber.org`` even if this is the same physical server behind the same IP address.
+
+   To adjust the limit you have to add following to the ``config.tdsl`` file:
+
+   .. code:: dsl
+
+      s2s {
+          'max-out-total-conns' = 2
+      }
+
+-  ``max-out-per-ip-conns`` - this property specifies the maximum outgoing connections Tigase server opens to any remote XMPP server to its single IP address. This too, is **per domain** limit, which means that this limit applies to each of the remote domains Tigase connects to. If it is set to ``1``, and the above limit is set to ``4``, and the remote server is visible behind 1 IP address, then Tigase opens a maximum of 1 connection to ``jabber.org`` plus a maximum of 1 connection to ``muc.jabber.org`` and other subdomains.
+
+   To adjust the limit you have to add following line to the ``config.tdsl`` file:
+
+   .. code:: dsl
+
+      s2s {
+          'max-out-per-ip-conns' = 2
+      }
+
+
+Connection Throughput
+~~~~~~~~~~~~~~~~~~~~~
+
+Of course everybody wants his server to run with maximum throughput. This comes with a cost on resources, usually increased memory usage. This is especially important if you have large number of s2s connections on your installations. High throughput means lots of memory for network buffers for every single s2s connection. You may soon run out of all available memory.
+
+There is one configuration property which allows you to adjust the network buffers for s2s connections to lower your memory usage or increase data throughput for s2s communication.
+
+More details about are available in the `net-buff-high-throughput <#netBuffHighThroughput>`__ or `net-buff-Standard <#netBuffStandard>`__ property descriptions.
+
+Maximum Packet Waiting Time and Connection Inactivity Time
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are 2 timeouts you can set for the component controlling s2s communication.
+
+-  ``max-packet-waiting-time`` - this sets the maximum time for the packets waiting for sending to some remote server. Sometimes, due to networking problems or DNS problems it might be impossible to send message to remote server right away. Establishing a new connection may take time or there might be communication problems between servers or perhaps the remote server is restarted. Tigase will try a few times to connect to the remote server before giving up. This parameter specifies how long the packet is waiting for sending before it is returned to the sender with an error. The timeout is specified in seconds:
+
+   .. code:: dsl
+
+      s2s {
+          'max-packet-waiting-time' = 420L
+      }
+
+-  ``max-inactivity-time`` - this parameters specifies the maximum s2s connection inactivity time before it is closed. If a connection is not in use for a long time, it doesn’t make sense to keep it open and tie resources up. Tigase closes s2s connection after specified period of time and reconnects when it is necessary. The timeout is specified in seconds:
+
+   .. code:: dsl
+
+      s2s {
+          'max-inactivity-time' = 900L
+      }
+
+Custom Plugin: Selecting s2s Connection
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Sometimes for very large installations you may want to set larger number of s2s connections to remote servers, especially if they work in cluster of several nodes. In such a case you can also have a control over XMPP packets distribution among s2s connections to a single remote server.
+
+This piece of code is pluggable and you can write your own connection selector. It is enough to implement ``S2SConnectionSelector`` interface and set your class name in the configuration using following parameter in ``config.tdsl`` file:
+
+.. code:: dsl
+
+   s2s {
+       's2s-conn-selector' = 'YourSelectorImplementation'
+   }
+
+The default selector picks connections randomly.
+
+skip-tls-hostnames
+~~~~~~~~~~~~~~~~~~~
+
+The ``s2s-skip-tls-hostnames`` property disables TLS handshaking for s2s connections to selected remote domains. Unfortunately some servers (certain versions of Openfire - [`1 <http://community.igniterealtime.org/thread/36206>`__] or [`2 <http://community.igniterealtime.org/thread/30578>`__]) have problems with TLS handshaking over s2s which prevents establishing a usable connection. This completely blocks any communication to these servers. As a workaround you can disable TLS for these domains to get communication back. Enabling this can be done on any vhost, but must be configured under the s2s component.
+
+.. code:: dsl
+
+   s2s {
+       'skip-tls-hostnames' = [ 'domain1', 'domain2' ]
+   }
+
+ejabberd-bug-workaround
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+This property activates a workaround for a bug in EJabberd in it’s s2s implementation. EJabberd does not send dialback in stream features after TLS handshaking even if the dialback is expected/needed. This results in unusable connection as EJabberd does not accept any packets on this connection either. The workaround is enabled by default right now until the EJabberd version without the bug is popular enough. A disadvantage of the workaround is that dialback is always performed even if the SSL certificate is fully trusted and in theory this dialback could be avoided. By default, this is not enabled.
+
+.. code:: dsl
+
+   s2s {
+       dialback () {
+           'ejabbered-bug-workaround' = true
+           }
+   }
+
+This replaces the old ``--s2s-ejabberd-bug-workaround-active`` property.
+
+2.9.4. Tigase Load Balancing
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase includes load balancing functionality allowing users to be redirected to the most suitable cluster node. Functionality relies on a see-other-host XMPP stream error message. The basic principle behind the mechanism is that user will get redirect if the host returned by the implementation differ from the host to which user currently tries to connect. It is required that the user JID to be known for the redirection to work correctly.
+
+Available Implementations
+~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+Tigase implementation is, as usual, extensible and allows for different, pluggable redirection strategies that implement the ``SeeOtherHostIfc`` interface.
+
+Currently there are three strategies available:
+
+-  ``SeeOtherHost`` - most basic implementation returning either single host configured in ``config.tdsl`` file or name of the current host;
+
+-  ``SeeOtherHostHashed`` (default) - default implementation for cluster environment of SeeOtherHostIfc returning redirect host based on the hash value of the user’s JID; list of the available nodes from which a selection would be made is by default composed and reflects all connected nodes, alternatively hosts list can be configured in the config.tdsl;
+
+-  ``SeeOtherHostDB`` - extended implementation of SeeOtherHost using redirect information from database in the form of pairs ``user_id`` and ``node_id`` to which given user should be redirected.
+
+-  ``SeeOtherHostDualIP`` - matches internal Tigase cluster nodes against the lookup table to provide relevant redirection hostname/IP (by default internal Tigase tig_cluster_nodes table will be used)
+
+Configuration Options
+~~~~~~~~~~~~~~~~~~~~~~
+
+The most basic configuration is related to the choice of actual redirection implementation by declaring class for each connector:
+
+.. code:: dsl
+
+   bosh {
+       seeOtherHost (class: <value>) {}
+   }
+   c2s {
+       seeOtherHost (class: <value>) {}
+   }
+   ws2s {
+       seeOtherHost (class: <value>) {}
+   }
+
+Possible values are:
+
+-  ``tigase.server.xmppclient.SeeOtherHost``
+
+-  ``tigase.server.xmppclient.SeeOtherHostHashed``
+
+-  ``tigase.server.xmppclient.SeeOtherHostDB``
+
+-  ``tigase.server.xmppclient.SeeOtherHostDualIP``
+
+-  ``none`` - disables redirection
+
+All options are configured on a per-connection-manager basis, thus all options need to be prefixed with the corresponding connection manager ID, i.e. c2s, bosh or ws; we will use c2s in the examples:
+
+.. code:: dsl
+
+   c2s {
+       'cm-see-other-host' {
+           'default-host' = 'host1;host2;host3'
+           'phases' = [ 'OPEN', 'LOGIN' ]
+       }
+   }
+
+-  ``'default-host' = 'host1;host2;host3'`` - a semicolon separated list of hosts to be used for redirection.
+
+-  ``'phases' = []`` - an array of phases in which redirection should be active, currently possible values are:
+
+   -  ``OPEN`` which enables redirection during opening of the XMPP stream;
+
+   -  ``LOGIN`` which enables redirection upon authenticating user session;
+
+By default redirection is currently enabled only in the ``OPEN`` phase.
+
+SeeOtherHostDB
+''''''''''''''
+
+For ``SeeOtherHostDB`` implementation there are additional options:
+
+.. code:: dsl
+
+   c2s {
+       'cm-see-other-host' {
+           'db-url' = 'jdbc:mysqk://localhost/username?,password?'
+           'get-all-query-timeout' = '10'
+       }
+   }
+
+-  ``db-url`` - a JDBC connection URI which should be used to query redirect information; if not configured the default ``dataSource`` will be used;
+
+-  ``get-host-query`` - a SQL query which should return redirection hostname;
+
+-  ``get-all-data-query`` - a SQL helper query which should return all redirection data from database;
+
+-  ``get-all-query-timeout`` - allows to set timeout for executed queries.
+
+
+SeeOtherHostDualIP
+'''''''''''''''''''
+
+This mechanisms matches internal Tigase cluster nodes against the lookup table to provide matching and relevant redirection hostname/IP. By default internal Tigase ``tig_cluster_nodes`` table is used (and appropriate repository implementation will be used).
+
+To enable this redirection mechanism following configuration / class should be used. Note that for global use, all connection managers must have the same class defined. You can define each connection manager individually.
+
+.. code:: dsl
+
+   bosh {
+       seeOtherHost (class: tigase.server.xmppclient.SeeOtherHostDualIP) {}
+   }
+   c2s {
+       seeOtherHost (class: tigase.server.xmppclient.SeeOtherHostDualIP) {}
+   }
+   ws2s {
+       seeOtherHost (class: tigase.server.xmppclient.SeeOtherHostDualIP) {}
+   }
+
+It offers following configuration options:
+
+-  ``data-source`` - configuration of the source of redirection information - by default internal Tigase ``tig_cluster_nodes`` table will be used (and appropriate repository implementation will be used); alternatively it’s possible to use ``eventbus`` source;
+
+-  ``db-url`` - a JDBC connection URI which should be used to query redirect information; if not configured ``user-db-uri`` will be used;
+
+-  ``get-all-data-query`` - a SQL helper query which should return all redirection data from database;
+
+-  ``get-all-query-timeout`` - allows to set timeout for executed queries;
+
+-  ``fallback-redirection-host`` - if there is no redirection information present (i.e. secondary hostname is not configured for the particular node) redirection won’t be generated; with this it’s possible to configure fallback redirection address.
+
+All options are configured or on per-component basis:
+
+.. code:: dsl
+
+   <connector> {
+       'cm-see-other-host' {
+           'data-source' = '<class implementing tigase.server.xmppclient.SeeOtherHostDualIP.DualIPRepository>'
+           'db-url' = 'jdbc:<database>://<uri>'
+           'fallback-redirection-host' = '<hostname>'
+           'get-all-data-query' = 'select * from tig_cluster_nodes'
+           'get-all-query-timeout' = 10
+       }
+   }
+
+EventBus as a source of information
+
+It’s possible to utilize EventBus and internal Tigase events as a source of redirection data. In order to do that ``eventbus-repository-notifications`` needs to be enabled in ClusterConnectionManager:
+
+.. code:: dsl
+
+   'cl-comp' {
+       'eventbus-repository-notifications' = true
+   }
+
+
+Auxiliary setup options
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Enforcing redirection
+''''''''''''''''''''''
+
+It’s possible to enforce redirection of connections on the particular port of connection manager with ``force-redirect-to`` set to Integer with the following general setting option:
+
+.. code:: dsl
+
+   <connection_manager> {
+       connections {
+           <listening_port> {
+               'force-redirect-to' = <destination_port>
+           }
+       }
+   }
+
+for example, enable additional port ``5322`` for ``c2s`` connection manager and enforce all connections to be redirected to port ``5222`` (it will utilize hostname retrieved from ``SeeOtherHost`` implementation and will be only used when such value is returned):
+
+.. code:: dsl
+
+   c2s {
+       connections {
+           ports = [ 5222, 5322 ]
+           5322 {
+               'force-redirect-to' = 5222
+               socket = 'plain'
+               type = 'accept'
+           }
+       }
+   }
+
+
+Configuring hostnames
+''''''''''''''''''''''
+
+To fully utilize ``SeeOtherHostDualIP`` setup in automated fashion it’s now possible to provide both primary (*internal*) and secondary (*external*) hostname/IP (they need to be correct, ``InetAddress.getByName( property );`` will be used to verify correctness). It can be done via JVM properties ``tigase-primary-address`` and ``tigase-secondary-address``. You can also utilize different implementation of DNS resolver by providing class implementing ``tigase.util.DNSResolverIfc`` interface as value to ``resolver-class`` property. Those properties can be set via ``etc/tigase.conf`` (uncommenting following lines, or manually exposing in environment):
+
+.. code:: bash
+
+   DNS_RESOLVER=" -Dresolver-class=tigase.util.DNSResolverDefault "
+
+   INTERNAL_IP=" -Dtigase-primary-address=hostname.local "
+   EXTERNAL_IP=" -Dtigase-secondary-address=hostname "
+
+or in the ``etc/config.tdsl`` (they will be converted to JVM properties):
+
+.. code:: dsl
+
+   'dns-resolver' {
+       'tigase-resolver-class' = 'tigase.util.DNSResolverDefault'
+       'tigase-primary-address' = 'hostname.local'
+       'tigase-secondary-address' = 'hostname'
+   }
+
+2.9.5. External Component Configuration
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Tigase can connect to external components, this guide will show you how this can be accomplished.
+
+Configuration follows the same standards as all other components. It is also much more powerful as a single Tigase instance can control many TCP/IP ports and many external components on each port and even allows for multiple connections for the same component. It supports both XEP-0114 and XEP-0225 with protocol auto-detection mechanisms. Protocols are pluggable so more protocols can be supported or custom extensions to existing protocols can be added.
+
+The implementation also supports a scripting API and new domains with passwords can be added at run-time using ad-hoc commands. New scripts can be loaded to even further control all connected external components.
+
+Pages in this guide describe in details all the administration aspects of setting up and managing external components.
+
+-  `External Component Configuration <#tigaseExternalComponent>`__
+
+-  `Tigase as an External Component <#tigaseasExternal>`__
+
+-  `Load Balancing External Components in Cluster Mode <#loadBalancingExternalComponent>`__
+
+External Component Configuration
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+As for all Tigase components you can load and configure external components via the ``config.tdsl`` file described in details in the `DSL configuration <#dslConfig>`__ section. This document describes how to enable the component and set the initial configuration to accept or initiate connections for an external component.
+
+First thing to do is to specify the component class and the component name which must be unique within the Tigase installation. The most commonly name used is ``ext`` and the class is ``tigase.server.ext.ComponentProtocol`` (class doesn’t have to be specified when using default name).
+
+The following line in the ``config.tdsl`` will load the component during the server startup time:
+
+.. code:: dsl
+
+   ext (class: tigase.server.ext.ComponentProtocol) {}
+
+While this would load the component, without any additional configurations provided, the component would be practically useless. It is necessary to configure the virtual host domains of the external component during run-time via ad-hoc commands to make use of this component.
+
+You may additionally configure the ```bind-ext-hostnames`` <#bindExtHostnames>`__ property.
+
+To configure external component connections using Admin UI you need to open Admin UI web page (if you are logged in the same computer on which Tigase XMPP Server is running by default it should be available at http://localhost:8080/admin/). Then you should click on ``Configuration`` on the left side of the Admin UI web page and then select ``Add new item`` on ``ext`` component or by execution corresponding ad-hoc command on ``ext`` component using ad-hoc capable XMPP client, ie. `Psi <http://psi-im.org>`__.
+
+|adminui ext add item button|
+
+You will be presented with a form which you should fill to configure external component connection details:
+
+|adminui ext add item form|
+
+-  *Domain name* - external component domain name (``muc.devel.tigase.org``)
+
+-  *Domain password* - password for authentication of the external component connection (``muc-pass``)
+
+-  *Connection type* - ``accept`` to make component wait for connection or ``connect`` force component to connect to the server (``connect``)
+
+-  *Port number* - port on which component should wait for connection or on which it try to connect (``5270``)
+
+-  *Remote host* - host to connect to (``devel.tigase.org``) *(may be left blank if component will only accept connections)*
+
+-  *Protocol* - id of protocol used for establishing connection
+
+   -  if connection type is ``connect``:
+
+      -  ``XEP-0114: Jabber Component Protocol (accept)`` - for `XEP-0114: Jabber Component Protocol <https://xmpp.org/extensions/xep-0114.html>`__
+
+      -  ``XEP-0225: Component Connections`` - for `XEP-0225: Component Connections <https://xmpp.org/extensions/xep-0225.html>`__
+
+   -  if connection type is ``accept``:
+
+      -  ``Autodetect`` - for automatic detection of protocol used by incoming connection *(recommended)*
+
+      -  ``XEP-0114: Jabber Component Protocol (accept)`` - for `XEP-0114: Jabber Component Protocol <https://xmpp.org/extensions/xep-0114.html>`__
+
+      -  ``XEP-0225: Component Connections`` - for `XEP-0225: Component Connections <https://xmpp.org/extensions/xep-0225.html>`__
+
+Additional options may be left with defaults.
+
+Later on if you would like to modify this values, you can do that using Admin UI by clicking on ``Configuration`` and ``Remove an item`` or ``Update item configuration`` at ``ext`` component or by execution corresponding ad-hoc commands on ``ext`` component using ad-hoc capable XMPP client, ie. `Psi <http://psi-im.org>`__.
+
+.. |adminui ext add item button| image:: images/admin/adminui_ext_add_item_button.png
+.. |adminui ext add item form| image:: images/admin/adminui_ext_add_item_form.png
+
+Tigase as an External Component
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+There are cases when you want to deploy one or more Tigase components separately from the main server, or perhaps you want to run some Tigase components connecting to a different XMPP server, or perhaps you work on a component and you do not want to restart the main server every time you make a change.
+
+There is a way to run the Tigase server in *external component mode*. In fact you can run any of Tigase’s components as an external component and connect them to the main XMPP server either via `XEP-0114 <http://xmpp.org/extensions/xep-0114.html>`__ or `XEP-0225 <http://xmpp.org/extensions/xep-0225.html>`__ connection.
+
+Let’s look at the examples…​
+
+Usage with shared database (since version 8.0.0)
+'''''''''''''''''''''''''''''''''''''''''''''''''
+
+When you are using Tigase server 8.0.0 or newer in the "external component mode" while using shared default "user repository" and you have main server also running Tigase XMPP Server 8.0.0 or newer, then you can benefit from the remote management of the component connections from the main server. To use that, you need to enable external component and external component manager on the main server by adding following line to the config file:
+
+.. code:: dsl
+
+   'ext' () {}
+   'ext-man' () {}
+
+With that in place you can use Admin UI or ad-hoc commands available at ``ext-man`` component of the main server to configure connection details of the servers running in the ``component`` mode.
+
+In Admin UI you click on ``Configuration`` section and select ``Add new item`` at the ``ext-man`` component, which will present you with a following form to fill in external component connectivity details:
+
+|adminui extman add item form|
+
+
+A Simple Case - MUC as an External Component
+
+A few assumptions:
+
+1. We want to run a MUC component for a domain: ``muc.devel.tigase.org`` and password ``muc-pass``
+
+2. The main server works at an address: devel.tigase.org and for the same virtual domain
+
+3. We want to connect to the server using `XEP-0114 <http://xmpp.org/extensions/xep-0114.html>`__ protocol and port ``5270``.
+
+There is a special configuration type for this case which simplifies setting needed to run Tigase as an external component:
+
+.. code:: dsl
+
+   'config-type' = 'component'
+
+Knowing that we can now create simple configuration file for Tigase XMPP Server:
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'master_server_default_database_url'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   ext () {
+   }
+
+where ``master_server_default_database_url`` is the same URL as the one used on the main server for default data source.
+
+With that in place we can use ad-hoc commands or Admin UI on the main server to configure Tigase XMPP Server to accept external component connections and to connect from the external component to the master server.
+
+**Adding external component connection settings to the manager (ext-man) using Admin UI.**
+
+|adminui extman add item form external muc|
+
+You need to pass:
+
+-  Domain name - external component domain name (``muc.devel.tigase.org``)
+
+-  Domain password - password for authentication of the external component connection (``muc-pass``)
+
+-  Connection type - ``accept`` to make component wait for connection or ``connect`` force component to connect to the server (``connect``)
+
+-  Port number - port on which component should wait for connection or on which it try to connect (``5270``)
+
+-  Remote host - host to connect to (``devel.tigase.org``)
+
+-  Protocol - id of protocol used for establishing connection
+
+   -  ``XEP-0114: Jabber Component Protocol (accept)`` - establish connection using `XEP-0114: Jabber Component Protocol <https://xmpp.org/extensions/xep-0114.html>`__
+
+   -  ``XEP-0225: Component Connections`` - establish connection using `XEP-0225: Component Connections <https://xmpp.org/extensions/xep-0225.html>`__
+
+Additional options may be left with defaults.
+
+More Components
+
+Suppose you want to run more than one component as an external components within one Tigase instance. Let’s add another - PubSub component to the configuration above and see how to set it up.
+
+The most straightforward way is just to add another component to the server running in the component mode for the component domain
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:/tigasedb'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+   ext () {}
+
+and then to add new connection domain to the main server external component settings and to the external component manager settings. You basically do the same thing as you did while adding only MUC component as the external component.
+
+Please note however that we are opening two connections to the same server. This can waste resources and over-complicate the system. For example, what if we want to run even more components? Opening a separate connection for each component is a tad overkill.
+
+In fact there is a way to reuse the same connection for all component domains running as an external component. The property ``bind-ext-hostnames`` contains a comma separated list of all hostnames (external domains) which should reuse the existing connection.
+
+There is one catch however. Since you are reusing connections (hostname binding is defined in `XEP-0225 <http://xmpp.org/extensions/xep-0225.html>`__ only), you must use this protocol for the functionality.
+
+Here is an example configuration with a single connection over the `XEP-0225 <http://xmpp.org/extensions/xep-0225.html>`__ protocol used by both external domains:
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'bind-ext-hostnames' = [ 'pubsub.devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:/tigasedb'
+       }
+   }
+   ext () {
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+
+With this configuration you do not need to configure entries in ``ext-man`` for PubSub component, only for MUC component but you need to user ``client`` as the value for protocol field.
+
+Usage with a separate database
+''''''''''''''''''''''''''''''
+
+A Simple Case - MUC as an External Component
+
+A few assumptions:
+
+1. We want to run a MUC component for a domain: ``muc.devel.tigase.org`` and password ``muc-pass``
+
+2. The main server works at an address: devel.tigase.org and for the same virtual domain
+
+3. We want to connect to the server using `XEP-0114 <http://xmpp.org/extensions/xep-0114.html>`__ protocol and port ``5270``.
+
+There is a special configuration type for this case which simplifies setting needed to run Tigase as an external component:
+
+.. code:: dsl
+
+   'config-type' = 'component'
+
+This generates a configuration for Tigase with only one component loaded by default - the component used for external component connection. If you use this configuration type, your ``config.tdsl`` file may look like this:
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:/tigasedb'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   ext () {
+   }
+
+To make this new instance connect to the Tigase XMPP Server, you need to create one more file with external connection configuration at ``etc/externalComponentItems`` which will be loaded to the local database and then removed.
+
+.. code:: text
+
+   muc.devel.tigase.org:muc-pass:connect:5270:devel.tigase.org:accept
+
+.. Warning::
+
+    While loading configuration from ``etc/externalComponentItems`` file is supported, we recommend usage of shared database if possible. In future this method may be deprecated.
+
+
+More Components
+
+Suppose you want to run more than one component as an external components within one Tigase instance. Let’s add another - PubSub component to the configuration above and see how to set it up.
+
+The most straightforward way is just to add another external component connection to the main server for the component domain using Admin UI or ad-hoc command on the main server.
+
+Then we can use following configuration on the server running in the ``component`` mode:
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:/tigasedb'
+       }
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+   ext () {
+   }
+
+and we need to create a file with configuration for external component connection which will be loaded to the internal database:
+
+.. code:: text
+
+   muc.devel.tigase.org:muc-pass:connect:5270:devel.tigase.org:accept
+   pubsub.devel.tigase.org:pubsub-pass:connect:5270:devel.tigase.org:accept
+
+Please note however that we are opening two connections to the same server. This can waste resources and over-complicate the system. For example, what if we want to run even more components? Opening a separate connection for each component is a tad overkill.
+
+In fact there is a way to reuse the same connection for all component domains running as an external component. The property ``bind-ext-hostnames`` contains a comma separated list of all hostnames (external domains) which should reuse the existing connection.
+
+There is one catch however. Since you are reusing connections (hostname binding is defined in `XEP-0225 <http://xmpp.org/extensions/xep-0225.html>`__ only), you must use this protocol for the functionality.
+
+Here is an example configuration with a single connection over the `XEP-0225 <http://xmpp.org/extensions/xep-0225.html>`__ protocol used by both external domains:
+
+.. code:: dsl
+
+   admins = [ 'admin@devel.tigase.org' ]
+   'bind-ext-hostnames' = [ 'pubsub.devel.tigase.org' ]
+   'config-type' = 'component'
+   debug = [ 'server' ]
+   'default-virtual-host' = [ 'devel.tigase.org' ]
+   dataSource {
+       default () {
+           uri = 'jdbc:derby:/tigasedb'
+       }
+   }
+   ext () {
+   }
+   userRepository {
+       default () {}
+   }
+   authRepository {
+       default () {}
+   }
+   muc (class: tigase.muc.MUCComponent) {}
+   pubsub (class: tigase.pubsub.PubSubComponent) {}
+
+and example of the external connections configuration file:
+
+.. code:: text
+
+   muc.devel.tigase.org:muc-pass:connect:5270:devel.tigase.org:client
+
+.. |adminui extman add item form| image:: images/admin/adminui_extman_add_item_form.png
+.. |adminui extman add item form external muc| image:: images/admin/adminui_extman_add_item_form_external_muc.png
+
+2.9.6. Load Balancing External Components in Cluster Mode
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+
 
 
 
