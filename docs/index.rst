@@ -9,6 +9,9 @@ Tigase Documentation
 
    Release_Notes
    Administration_Guide
+   Tigase_Server_Extras
+   ACS
+   HTTP_API_Component
 
 
 
