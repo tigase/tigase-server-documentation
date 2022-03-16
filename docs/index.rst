@@ -12,8 +12,10 @@ Tigase Documentation
    Tigase_Server_Extras
    ACS
    HTTP_API_Component
-
-
+   HTTP_File
+   HTTP_Server
+   Tigase_Message_Archiving
+   Tigase_PubSub_Component
 
 
 
