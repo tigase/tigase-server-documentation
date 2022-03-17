@@ -352,7 +352,6 @@ MUC component by default filters messages and allows only ``<body/>`` element to
        'message-filter-enabled' = false
    }
 
-
 11.5.5. Disable presence filtering
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 

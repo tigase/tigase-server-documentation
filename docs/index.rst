@@ -18,8 +18,9 @@ Tigase Documentation
    Tigase_PubSub_Component
    MIX_Component
    MUC_Component
-
-
-
+   Socks5_Proxy
+   Push_Component
+   STUN_Component
+   SPAM_Filter
 
 
