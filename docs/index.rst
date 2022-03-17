@@ -16,7 +16,8 @@ Tigase Documentation
    HTTP_Server
    Tigase_Message_Archiving
    Tigase_PubSub_Component
-
+   MIX_Component
+   MUC_Component
 
 
 
