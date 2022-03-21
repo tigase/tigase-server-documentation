@@ -4,8 +4,8 @@ Tigase Documentation
 ===================================
 
 .. toctree::
-   :caption: Tigase Administration Guide -Version 8.3.0
    :maxdepth: 2
+   :titlesonly:
 
    Release_Notes
    Administration_Guide
