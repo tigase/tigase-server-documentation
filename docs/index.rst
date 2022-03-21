@@ -4,23 +4,28 @@ Tigase Documentation
 ===================================
 
 .. toctree::
-   :maxdepth: 2
+   :caption: Tigase Administration Guide -Version 8.3.0
    :titlesonly:
 
-   Release_Notes
-   Administration_Guide
-   Tigase_Server_Extras
-   ACS
-   HTTP_API_Component
-   HTTP_File
-   HTTP_Server
-   Tigase_Message_Archiving
-   Tigase_PubSub_Component
-   MIX_Component
-   MUC_Component
-   Socks5_Proxy
-   Push_Component
-   STUN_Component
-   SPAM_Filter
+   Tigase_Admistration/Release_Notes
+   Tigase_Admistration/Administration_Guide
+   Tigase_Admistration/Tigase_Server_Extras
+   Tigase_Admistration/ACS
+   Tigase_Admistration/HTTP_API_Component
+   Tigase_Admistration/HTTP_File
+   Tigase_Admistration/HTTP_Server
+   Tigase_Admistration/Tigase_Message_Archiving
+   Tigase_Admistration/Tigase_PubSub_Component
+   Tigase_Admistration/MIX_Component
+   Tigase_Admistration/MUC_Component
+   Tigase_Admistration/Socks5_Proxy
+   Tigase_Admistration/Push_Component
+   Tigase_Admistration/STUN_Component
+   Tigase_Admistration/SPAM_Filter
 
 
+.. toctree::
+   :caption: Tigase Development Guide -Version 8.3.0
+   :titlesonly:
+
+   Tigase_Development/Development_Guide
