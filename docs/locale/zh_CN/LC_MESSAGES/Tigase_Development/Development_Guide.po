@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: TigaseDoc \n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-03-21 14:32-0700\n"
+"POT-Creation-Date: 2022-03-21 14:27-0700\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -17,16 +17,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.9.1\n"
 
-#: ../../index.rst:6
-#, fuzzy
-msgid "Tigase Admistration Guide -Version 8.3.0"
-msgstr "Tigase管理指南 —— 版本8.3.0"
-
-#: ../../index.rst:13
-msgid "Tigase Development Guide -Version 8.3.0"
-msgstr "Tigase开发指南 —— 版本8.3.0"
-
-#: ../../index.rst:4
-msgid "Tigase Documentation"
-msgstr "Tigase文档"
+#: ../../Tigase_Development/Development_Guide.rst:2
+msgid "1. Tigase Development Guide"
+msgstr ""
 
