@@ -20,7 +20,7 @@ msgstr ""
 #: ../../index.rst:6
 #, fuzzy
 msgid "Tigase Admistration Guide -Version 8.3.0"
-msgstr "Tigase管理指南 —— 版本8.3.0"
+msgstr " Tigase管理指南 —— 版本8.3.0 "
 
 #: ../../index.rst:13
 msgid "Tigase Development Guide -Version 8.3.0"
