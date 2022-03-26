@@ -5097,3 +5097,4 @@ it has been changed to:
    Packet method(JID from, JID to);
 
 As far as I know most of these method were used only by myself so I do not expect much trouble for other developers.
+
