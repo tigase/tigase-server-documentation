@@ -8,6 +8,8 @@ Welcome to Tigase XMPP Server 8.3.0! This is a feature release a number of fixes
 1.1. Highlights
 ----------------
 
+This version requires JDK17 to run
+
 1.2. Other significant changes
 ------------------------------
 
